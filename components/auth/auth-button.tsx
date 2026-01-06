@@ -1,3 +1,4 @@
+// components/auth/auth-button.tsx
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { createClient } from "@/lib/supabase/server";
