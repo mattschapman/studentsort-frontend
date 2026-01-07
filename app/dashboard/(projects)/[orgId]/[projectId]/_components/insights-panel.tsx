@@ -1,20 +1,12 @@
 // app/dashboard/(projects)/[orgId]/[projectId]/_components/insights-panel.tsx
 "use client";
 
-import React from "react";
 import { X } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useInsights } from "@/lib/contexts/insights-context";
 
 export default function InsightsPanel() {
-  const router = useRouter();
-
-  const handleClose = () => {
-    // Remove the insights param from URL
-    const url = new URL(window.location.href);
-    url.searchParams.delete('insights');
-    router.push(url.pathname + url.search);
-  };
+  const { closeInsights } = useInsights();
 
   return (
     <div className="w-80 border-l bg-white flex flex-col h-full">
@@ -24,7 +16,7 @@ export default function InsightsPanel() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={handleClose}
+          onClick={closeInsights}
           className="h-8 w-8"
         >
           <X className="h-4 w-4" />

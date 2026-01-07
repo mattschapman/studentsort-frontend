@@ -29,6 +29,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { deleteProject } from "../_actions/delete-project"
 
 interface Project {
   id: string
@@ -96,7 +97,27 @@ export function ProjectCard({ project, latestVersionId }: ProjectCardProps) {
   }
 
   const handleDelete = async () => {
-    toast.info("Delete functionality coming soon")
+    // Confirmation dialog
+    if (!confirm(`Are you sure you want to delete "${project.title}"? This action cannot be undone and will delete all versions and associated files.`)) {
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      const result = await deleteProject(project.org_id, project.id)
+      
+      if (result.success) {
+        toast.success("Project deleted successfully")
+        // Router refresh will happen automatically due to revalidatePath
+      } else {
+        toast.error(result.error || "Failed to delete project")
+        setIsDeleting(false)
+      }
+    } catch (error) {
+      console.error("Error deleting project:", error)
+      toast.error("An unexpected error occurred")
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -112,7 +133,7 @@ export function ProjectCard({ project, latestVersionId }: ProjectCardProps) {
               {project.description ?? project.description}
             </CardDescription>
           </div>
-          {/* <div className="mt-0! flex items-center">
+          <div className="mt-0! flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -144,22 +165,13 @@ export function ProjectCard({ project, latestVersionId }: ProjectCardProps) {
                   <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
                   <span className="text-xs">Open</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleEdit}>
-                  <Edit className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs">Edit</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleCopyLink}>
-                  <Copy className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs">Copy Link</span>
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleOpenInNewTab}>
                   <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
                   <span className="text-xs">Open in New Tab</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDuplicate}>
-                  <Files className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs">Duplicate</span>
+                <DropdownMenuItem onClick={handleCopyLink}>
+                  <Copy className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs">Copy Link</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -176,7 +188,7 @@ export function ProjectCard({ project, latestVersionId }: ProjectCardProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div> */}
+          </div>
         </CardHeader>
         <CardContent className="flex flex-col justify-end h-[40%]">
           <span

@@ -1,7 +1,7 @@
 // components/dashboard/header/header.tsx
 "use client";
 
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Telescope } from "lucide-react";
 import { Logo } from "./header-logo";
 import OrgSwitcher from "./org-switcher";
@@ -11,6 +11,7 @@ import type { Organization, Project, Version } from "@/app/dashboard/_actions/ge
 import type { UserProfile } from "@/app/dashboard/_actions/get-user-profile";
 import { UserDropdown } from "./user-dropdown";
 import { Button } from "@/components/ui/button";
+import { useInsights } from "@/lib/contexts/insights-context";
 
 interface DashboardHeaderProps {
   organizations: Organization[];
@@ -27,7 +28,7 @@ export default function DashboardHeader({
 }: DashboardHeaderProps) {
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const { isInsightsOpen, toggleInsights } = useInsights();
 
   // Parse /dashboard/{orgId}/{projectId} with optional additional path segments
   const pathSegments = pathname.split('/').filter(Boolean);
@@ -53,27 +54,11 @@ export default function DashboardHeader({
   // Get version from query params
   currentVersionId = searchParams.get('version') ?? undefined;
 
-  // Check if insights panel is open
-  const isInsightsOpen = searchParams.get('insights') === 'open';
-
   // Determine what to show
   const showOrgSwitcher = !!currentOrgId;
   const showProjectSwitcher = !!currentProjectId;
   const showVersionSwitcher = !!currentProjectId && versions.some(v => v.project_id === currentProjectId);
   const showInsightsButton = !!currentProjectId;
-
-  // Toggle insights panel
-  const toggleInsights = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    
-    if (isInsightsOpen) {
-      params.delete('insights');
-    } else {
-      params.set('insights', 'open');
-    }
-    
-    router.push(`${pathname}?${params.toString()}`);
-  };
 
   return (
     <header className="z-50 w-full h-11 px-3 py-2 border-b flex items-center justify-between bg-white">
@@ -128,10 +113,10 @@ export default function DashboardHeader({
         {/* Insights button - only show on project pages */}
         {showInsightsButton && (
           <Button
-            variant={isInsightsOpen ? "secondary" : "outline"}
+            variant={"outline"}
             size="icon"
             onClick={toggleInsights}
-            className="rounded-full h-8 w-8"
+            className={`rounded-full h-8 w-8 ${isInsightsOpen ? 'bg-muted' : ''}`}
             title={isInsightsOpen ? "Close insights panel" : "Open insights panel"}
           >
             <Telescope className="h-4 w-4" />

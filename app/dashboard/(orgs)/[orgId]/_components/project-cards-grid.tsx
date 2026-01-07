@@ -21,8 +21,9 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
-import { ArrowUpDown, Filter, Search, FolderOpen, Plus } from "lucide-react"
+import { ArrowUpDown, Filter, Search, FolderOpen } from "lucide-react"
 import { ProjectCard } from "./project-card"
+import { CreateProjectDialog } from "./create-project-dialog"
 
 interface Project {
   id: string
@@ -49,6 +50,7 @@ interface ProjectCardsGridProps {
   projects: Project[]
   versions: Version[]
   orgId: string
+  orgTitle: string
 }
 
 type SortOption =
@@ -65,7 +67,7 @@ type FilterState = {
   statuses: string[]
 }
 
-export function ProjectCardsGrid({ projects, versions, orgId }: ProjectCardsGridProps) {
+export function ProjectCardsGrid({ projects, versions, orgId, orgTitle }: ProjectCardsGridProps) {
   const [filteredProjects, setFilteredProjects] = useState<Project[]>(projects)
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState<SortOption>("created_at_desc")
@@ -163,11 +165,6 @@ export function ProjectCardsGrid({ projects, versions, orgId }: ProjectCardsGrid
   const hasActiveFilters =
     filters.statuses.length > 0 || searchQuery.trim() !== ""
 
-  const handleNewProject = () => {
-    // Placeholder for now
-    console.log("Create new project")
-  }
-
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 pt-5 lg:pt-10">
       <div className="flex flex-col gap-4">
@@ -260,11 +257,8 @@ export function ProjectCardsGrid({ projects, versions, orgId }: ProjectCardsGrid
             </div>
           </div>
 
-          {/* New Project Button */}
-          {/* <Button size="xs" onClick={handleNewProject} className="text-xs">
-            <Plus className="h-3 w-3" />
-            New
-          </Button> */}
+          {/* New Project Dialog */}
+          <CreateProjectDialog orgId={orgId} orgTitle={orgTitle} />
         </div>
       </div>
 
@@ -282,10 +276,7 @@ export function ProjectCardsGrid({ projects, versions, orgId }: ProjectCardsGrid
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Button size="xs" onClick={handleNewProject} className="text-xs">
-                <Plus className="h-4 w-4" />
-                Create Project
-              </Button>
+              <CreateProjectDialog orgId={orgId} orgTitle={orgTitle} />
             </EmptyContent>
           </Empty>
         ) : filteredProjects.length === 0 && hasActiveFilters ? (

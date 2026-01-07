@@ -1,7 +1,7 @@
 // app/dashboard/(projects)/[orgId]/[projectId]/wrapper.tsx
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useInsights } from "@/lib/contexts/insights-context";
 import InsightsPanel from "./_components/insights-panel";
 
 interface ProjectContentWrapperProps {
@@ -9,8 +9,7 @@ interface ProjectContentWrapperProps {
 }
 
 export default function ProjectContentWrapper({ children }: ProjectContentWrapperProps) {
-  const searchParams = useSearchParams();
-  const isInsightsOpen = searchParams.get('insights') === 'open';
+  const { isInsightsOpen } = useInsights();
 
   return (
     <>
