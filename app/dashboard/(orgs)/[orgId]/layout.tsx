@@ -1,4 +1,4 @@
-// app/dashboard/[orgId]/layout.tsx
+// app/dashboard/(orgs)/[orgId]/layout.tsx
 import OrganizationsOuterSidebar from "@/components/dashboard/sidebar/org-sidebar"
 
 interface OrgLayoutProps {

@@ -1,4 +1,4 @@
-// app/dashboard/[orgId]/[projectId]/page.tsx
+// app/dashboard/(projects)/[orgId]/[projectId]/page.tsx
 import { redirect } from "next/navigation";
 import { getVersions } from "@/app/dashboard/_actions/get-orgs-projects";
 

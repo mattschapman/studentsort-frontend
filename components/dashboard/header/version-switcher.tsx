@@ -84,8 +84,14 @@ export default function VersionSwitcher({
           {currentVersion ? (
             <div className="flex items-center gap-2">
               v{currentVersion.version}
-              {isLatestVersion && (
-                <span className="text-[10px] text-gray-500">Latest</span>
+              {isLatestVersion ? (
+                <span className="text-[10px] text-green-600 px-2 py-1 rounded-full bg-green-50 border border-green-100">
+                  Latest
+                </span>
+              ) : (
+                <span className="text-[10px] text-orange-600 px-2 py-1 rounded-full bg-orange-50 border border-orange-100">
+                  Old
+                </span>
               )}
             </div>
           ) : (
@@ -98,54 +104,54 @@ export default function VersionSwitcher({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-62.5 p-0" align="start">
-        <Command>
-          <CommandList>
-            <CommandEmpty>No versions found.</CommandEmpty>
-            
-            <CommandGroup heading="Versions">
-              {projectVersions.map((version) => {
-                const isLatest = version.id === projectVersions[0]?.id;
-                
-                return (
-                  <CommandItem
-                    key={version.id}
-                    value={`version-${version.id}`}
-                    onSelect={() => handleVersionSelect(version.id)}
-                    className={`px-2 has-[>svg]:px-1.5 flex items-center gap-2 cursor-pointer hover:bg-accent ${
-                      currentVersionId === version.id ? 'bg-accent' : ''
-                    }`}
-                  >
-                    <GitBranch className="h-4 w-4 text-gray-500" />
-                    <span className="flex-1 text-xs">v{version.version}</span>
-                    {isLatest && (
-                      <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0 rounded-full">
-                        latest
-                      </span>
-                    )}
-                    {currentVersionId === version.id && (
-                      <div className="h-2 w-2 rounded-full bg-blue-500" />
-                    )}
-                  </CommandItem>
-                );
-              })}
+        <PopoverContent className="w-62.5 p-0" align="start">
+          <Command>
+            <CommandList>
+              <CommandEmpty>No versions found.</CommandEmpty>
               
-              {/* Create Version Button */}
-              {/* <div className="border-t pt-1 mt-1">
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  onClick={handleCreateVersion}
-                  className="w-full justify-start text-gray-600 hover:text-gray-900 hover:bg-accent text-xs"
-                >
-                  <Plus className="h-4 w-4" />
-                  Create version
-                </Button>
-              </div> */}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+              <CommandGroup heading="Versions">
+                {projectVersions.map((version) => {
+                  const isLatest = version.id === projectVersions[0]?.id;
+                  
+                  return (
+                    <CommandItem
+                      key={version.id}
+                      value={`version-${version.id}`}
+                      onSelect={() => handleVersionSelect(version.id)}
+                      className={`px-2 has-[>svg]:px-1.5 flex items-center gap-2 cursor-pointer hover:bg-accent ${
+                        currentVersionId === version.id ? 'bg-accent' : ''
+                      }`}
+                    >
+                      <GitBranch className="h-4 w-4 text-gray-500" />
+                      <span className="flex-1 text-xs">v{version.version}</span>
+                      {isLatest && (
+                        <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0 rounded-full">
+                          latest
+                        </span>
+                      )}
+                      {currentVersionId === version.id && (
+                        <div className="h-2 w-2 rounded-full bg-blue-500" />
+                      )}
+                    </CommandItem>
+                  );
+                })}
+                
+                {/* Create Version Button */}
+                {/* <div className="border-t pt-1 mt-1">
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    onClick={handleCreateVersion}
+                    className="w-full justify-start text-gray-600 hover:text-gray-900 hover:bg-accent text-xs"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create version
+                  </Button>
+                </div> */}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
   );
 }

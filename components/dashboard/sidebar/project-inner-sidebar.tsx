@@ -141,7 +141,7 @@ export default function ProjectInnerSidebar({ orgId, projectId }: ProjectInnerSi
   }
 
   return (
-    <div className="w-48 h-full border-r bg-white shrink-0">
+    <div className="w-56 h-full border-r bg-white shrink-0">
       <div className="h-full">
         {/* Section Title */}
         <div className="py-2 px-4.5">

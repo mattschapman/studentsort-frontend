@@ -1,8 +1,8 @@
 // components/dashboard/header/header.tsx
 "use client";
 
-import React from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { Telescope } from "lucide-react";
 import { Logo } from "./header-logo";
 import OrgSwitcher from "./org-switcher";
 import ProjectSwitcher from "./project-switcher";
@@ -27,6 +27,7 @@ export default function DashboardHeader({
 }: DashboardHeaderProps) {
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   // Parse /dashboard/{orgId}/{projectId} with optional additional path segments
   const pathSegments = pathname.split('/').filter(Boolean);
@@ -52,10 +53,27 @@ export default function DashboardHeader({
   // Get version from query params
   currentVersionId = searchParams.get('version') ?? undefined;
 
+  // Check if insights panel is open
+  const isInsightsOpen = searchParams.get('insights') === 'open';
+
   // Determine what to show
   const showOrgSwitcher = !!currentOrgId;
   const showProjectSwitcher = !!currentProjectId;
   const showVersionSwitcher = !!currentProjectId && versions.some(v => v.project_id === currentProjectId);
+  const showInsightsButton = !!currentProjectId;
+
+  // Toggle insights panel
+  const toggleInsights = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    if (isInsightsOpen) {
+      params.delete('insights');
+    } else {
+      params.set('insights', 'open');
+    }
+    
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   return (
     <header className="z-50 w-full h-11 px-3 py-2 border-b flex items-center justify-between bg-white">
@@ -107,6 +125,19 @@ export default function DashboardHeader({
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Insights button - only show on project pages */}
+        {showInsightsButton && (
+          <Button
+            variant={isInsightsOpen ? "secondary" : "outline"}
+            size="icon"
+            onClick={toggleInsights}
+            className="rounded-full h-8 w-8"
+            title={isInsightsOpen ? "Close insights panel" : "Open insights panel"}
+          >
+            <Telescope className="h-4 w-4" />
+          </Button>
+        )}
+        
         <UserDropdown 
           user={{
             name: user.name,

@@ -1,6 +1,7 @@
-// app/dashboard/[orgId]/[projectId]/layout.tsx
+// app/dashboard/(projects)/[orgId]/[projectId]/layout.tsx
 import ProjectOuterSidebar from "@/components/dashboard/sidebar/project-outer-sidebar"
 import ProjectInnerSidebar from "@/components/dashboard/sidebar/project-inner-sidebar"
+import ProjectContentWrapper from "./wrapper"
 
 interface ProjectLayoutProps {
   children: React.ReactNode
@@ -18,12 +19,10 @@ export default async function ProjectLayout({
   const { orgId, projectId } = await params
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-full min-h-0">
       <ProjectOuterSidebar orgId={orgId} projectId={projectId} />
       <ProjectInnerSidebar orgId={orgId} projectId={projectId} />
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
+      <ProjectContentWrapper>{children}</ProjectContentWrapper>
     </div>
   )
 }
