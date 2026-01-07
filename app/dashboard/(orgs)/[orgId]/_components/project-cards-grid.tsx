@@ -275,9 +275,9 @@ export function ProjectCardsGrid({ projects, versions, orgId, orgTitle }: Projec
                 Get started by creating your first project.
               </EmptyDescription>
             </EmptyHeader>
-            <EmptyContent>
+            {/* <EmptyContent>
               <CreateProjectDialog orgId={orgId} orgTitle={orgTitle} />
-            </EmptyContent>
+            </EmptyContent> */}
           </Empty>
         ) : filteredProjects.length === 0 && hasActiveFilters ? (
           <Empty>

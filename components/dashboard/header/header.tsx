@@ -1,8 +1,9 @@
 // components/dashboard/header/header.tsx
 "use client";
 
+import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Telescope } from "lucide-react";
+import { Telescope, Database } from "lucide-react";
 import { Logo } from "./header-logo";
 import OrgSwitcher from "./org-switcher";
 import ProjectSwitcher from "./project-switcher";
@@ -12,6 +13,7 @@ import type { UserProfile } from "@/app/dashboard/_actions/get-user-profile";
 import { UserDropdown } from "./user-dropdown";
 import { Button } from "@/components/ui/button";
 import { useInsights } from "@/lib/contexts/insights-context";
+import { EditProjectVersionDataDialog } from "@/app/dashboard/(projects)/[orgId]/[projectId]/_components/edit-project-version-data-dialog";
 
 interface DashboardHeaderProps {
   organizations: Organization[];
@@ -29,6 +31,7 @@ export default function DashboardHeader({
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
   const { isInsightsOpen, toggleInsights } = useInsights();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Parse /dashboard/{orgId}/{projectId} with optional additional path segments
   const pathSegments = pathname.split('/').filter(Boolean);
@@ -59,78 +62,105 @@ export default function DashboardHeader({
   const showProjectSwitcher = !!currentProjectId;
   const showVersionSwitcher = !!currentProjectId && versions.some(v => v.project_id === currentProjectId);
   const showInsightsButton = !!currentProjectId;
+  const showEditButton = !!currentProjectId && !!currentVersionId;
 
   return (
-    <header className="z-50 w-full h-11 px-3 py-2 border-b flex items-center justify-between bg-white">
-      <div className="flex items-center gap-2">
-        <Logo 
-          size="sm" 
-          showTitle={false} 
-          organizations={organizations}
-          currentOrgId={currentOrgId}
+    <>
+      <header className="z-50 w-full h-11 px-3 py-2 border-b flex items-center justify-between bg-white">
+        <div className="flex items-center gap-2">
+          <Logo 
+            size="sm" 
+            showTitle={false} 
+            organizations={organizations}
+            currentOrgId={currentOrgId}
+          />
+
+          {/* Show org switcher when on org or project pages */}
+          {showOrgSwitcher && (
+            <>
+              <span className="mx-1 text-md text-gray-400 font-light">/</span>
+              <OrgSwitcher
+                organizations={organizations}
+                projects={projects}
+                currentOrgId={currentOrgId}
+                currentProjectId={currentProjectId}
+              />
+            </>
+          )}
+
+          {/* Show project switcher only when on project pages */}
+          {showProjectSwitcher && (
+            <>
+              <span className="mr-1 text-md text-gray-400 font-light">/</span>
+              <ProjectSwitcher
+                organizations={organizations}
+                projects={projects}
+                currentOrgId={currentOrgId}
+                currentProjectId={currentProjectId}
+              />
+            </>
+          )}
+
+          {/* Show version switcher when on project pages with versions */}
+          {showVersionSwitcher && (
+            <>
+              <span className="mr-1 text-md text-gray-400 font-light">/</span>
+              <VersionSwitcher
+                versions={versions}
+                currentProjectId={currentProjectId}
+                currentVersionId={currentVersionId}
+              />
+            </>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Edit version data button - only show when version is selected */}
+          {showEditButton && currentOrgId && currentProjectId && currentVersionId && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsEditDialogOpen(true)}
+              className="rounded-full h-8 w-8"
+              title="Edit version data"
+            >
+              <Database className="h-4 w-4" />
+            </Button>
+          )}
+
+          {/* Insights button - only show on project pages */}
+          {showInsightsButton && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleInsights}
+              className={`rounded-full h-8 w-8 ${isInsightsOpen ? 'bg-muted' : ''}`}
+              title={isInsightsOpen ? "Close insights panel" : "Open insights panel"}
+            >
+              <Telescope className="h-4 w-4" />
+            </Button>
+          )}
+          
+          <UserDropdown 
+            user={{
+              name: user.name,
+              email: user.email,
+              avatar: user.avatar || "/avatars/shadcn.jpg", // fallback avatar
+            }} 
+          />
+        </div>
+      </header>
+
+      {/* Edit Version Data Dialog */}
+      {showEditButton && currentOrgId && currentProjectId && currentVersionId && (
+        <EditProjectVersionDataDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          projectId={currentProjectId}
+          orgId={currentOrgId}
+          versionId={currentVersionId}
         />
-
-        {/* Show org switcher when on org or project pages */}
-        {showOrgSwitcher && (
-          <>
-            <span className="mx-1 text-md text-gray-400 font-light">/</span>
-            <OrgSwitcher
-              organizations={organizations}
-              projects={projects}
-              currentOrgId={currentOrgId}
-              currentProjectId={currentProjectId}
-            />
-          </>
-        )}
-
-        {/* Show project switcher only when on project pages */}
-        {showProjectSwitcher && (
-          <>
-            <span className="mr-1 text-md text-gray-400 font-light">/</span>
-            <ProjectSwitcher
-              organizations={organizations}
-              projects={projects}
-              currentOrgId={currentOrgId}
-              currentProjectId={currentProjectId}
-            />
-          </>
-        )}
-
-        {/* Show version switcher when on project pages with versions */}
-        {showVersionSwitcher && (
-          <>
-            <span className="mr-1 text-md text-gray-400 font-light">/</span>
-            <VersionSwitcher
-              versions={versions}
-              currentProjectId={currentProjectId}
-              currentVersionId={currentVersionId}
-            />
-          </>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2">
-        {/* Insights button - only show on project pages */}
-        {showInsightsButton && (
-          <Button
-            variant={"outline"}
-            size="icon"
-            onClick={toggleInsights}
-            className={`rounded-full h-8 w-8 ${isInsightsOpen ? 'bg-muted' : ''}`}
-            title={isInsightsOpen ? "Close insights panel" : "Open insights panel"}
-          >
-            <Telescope className="h-4 w-4" />
-          </Button>
-        )}
-        
-        <UserDropdown 
-          user={{
-            name: user.name,
-            email: user.email,
-            avatar: user.avatar || "/avatars/shadcn.jpg", // fallback avatar
-          }} 
-        />
-      </div>
-    </header>
+      )}
+    </>
   );
 }
