@@ -22,7 +22,9 @@ export default async function ProjectLayout({
     <div className="flex h-full min-h-0">
       <ProjectOuterSidebar orgId={orgId} projectId={projectId} />
       <ProjectInnerSidebar orgId={orgId} projectId={projectId} />
-      <ProjectContentWrapper>{children}</ProjectContentWrapper>
+      <ProjectContentWrapper>
+        {children}
+      </ProjectContentWrapper>
     </div>
   )
 }

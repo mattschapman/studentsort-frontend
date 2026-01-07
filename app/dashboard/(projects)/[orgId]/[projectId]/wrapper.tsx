@@ -8,7 +8,9 @@ interface ProjectContentWrapperProps {
   children: React.ReactNode;
 }
 
-export default function ProjectContentWrapper({ children }: ProjectContentWrapperProps) {
+export default function ProjectContentWrapper({ 
+  children
+}: ProjectContentWrapperProps) {
   const { isInsightsOpen } = useInsights();
 
   return (
