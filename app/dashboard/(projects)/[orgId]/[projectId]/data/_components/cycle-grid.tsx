@@ -182,7 +182,7 @@ export function CycleGrid() {
     if (periodsForDay.length === 0) return 1;
     
     const occupiedColumns = new Set(periodsForDay.map(p => p.column));
-    for (let col = 1; col <= 30; col++) {
+    for (let col = 1; col <= 25; col++) {
       if (!occupiedColumns.has(col)) return col;
     }
     return null; // All columns occupied
@@ -441,7 +441,7 @@ export function CycleGrid() {
   };
 
   const gridData = getGridData();
-  const columns = Array.from({ length: 30 }, (_, i) => i + 1);
+  const columns = Array.from({ length: 25 }, (_, i) => i + 1);
 
   return (
     <div className="w-full h-full flex flex-col bg-white">
@@ -473,7 +473,7 @@ export function CycleGrid() {
               <th className="border border-t-0 border-l-0 px-4 text-left font-semibold bg-gray-50 min-w-20">Week</th>
               <th className="border border-t-0 px-4 text-left font-semibold bg-gray-50 min-w-30">Day</th>
               {columns.map(col => (
-                <th key={col} className="border border-t-0 px-1 py-2 text-center text-xs font-medium w-9 min-w-9 max-w-9">
+                <th key={col} className="border border-t-0 px-1 py-2 text-center text-xs font-medium w-11 min-w-11 max-w-11">
                   {col}
                 </th>
               ))}
@@ -498,7 +498,7 @@ export function CycleGrid() {
                           <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10">
                             <DropdownMenu onOpenChange={(open) => setWeekDropdownOpen(open ? week.id : null)}>
                               <DropdownMenuTrigger asChild>
-                                <button className={`w-3 h-6 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${hoveredWeekId === week.id || weekDropdownOpen === week.id ? 'opacity-100' : 'opacity-0'}`}>
+                                <button className={`w-3 h-7 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${hoveredWeekId === week.id || weekDropdownOpen === week.id ? 'opacity-100' : 'opacity-0'}`}>
                                   <GripVertical className={`w-4 h-4 text-gray-500 ${weekDropdownOpen === week.id ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`} />
                                 </button>
                               </DropdownMenuTrigger>
@@ -528,7 +528,7 @@ export function CycleGrid() {
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10">
                           <DropdownMenu onOpenChange={(open) => setDayDropdownOpen(open ? dayData.day.id : null)}>
                             <DropdownMenuTrigger asChild>
-                              <button className={`w-3 h-6 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${hoveredRowId === dayData.day.id || dayDropdownOpen === dayData.day.id ? 'opacity-100' : 'opacity-0'}`}>
+                              <button className={`w-3 h-7 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${hoveredRowId === dayData.day.id || dayDropdownOpen === dayData.day.id ? 'opacity-100' : 'opacity-0'}`}>
                                 <GripVertical className={`w-4 h-4 text-gray-500 ${dayDropdownOpen === dayData.day.id ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`} />
                               </button>
                             </DropdownMenuTrigger>
@@ -563,7 +563,7 @@ export function CycleGrid() {
                                 onOpenChange={(open) => setPopoverOpen(open ? `${dayData.day.id}-${col}` : null)}
                               >
                                 <PopoverTrigger asChild>
-                                  <button className="w-full h-6 hover:opacity-80 transition-opacity">
+                                  <button className="w-full h-7 hover:opacity-80 transition-opacity">
                                   </button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-48 p-1">
@@ -599,7 +599,7 @@ export function CycleGrid() {
                                 onOpenChange={(open) => setPopoverOpen(open ? `${dayData.day.id}-${col}` : null)}
                               >
                                 <PopoverTrigger asChild>
-                                  <button className="w-full h-6 hover:bg-gray-100 transition-colors">
+                                  <button className="w-full h-7 hover:bg-gray-100 transition-colors">
                                     <Plus className="size-3 mx-auto text-gray-400" />
                                   </button>
                                 </PopoverTrigger>
@@ -623,7 +623,7 @@ export function CycleGrid() {
                           // Empty cell that's not next available
                           return (
                             <td key={col} className="border">
-                              <div className="h-6"></div>
+                              <div className="h-7"></div>
                             </td>
                           );
                         }
@@ -640,7 +640,7 @@ export function CycleGrid() {
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10">
                         <DropdownMenu onOpenChange={(open) => setWeekDropdownOpen(open ? week.id : null)}>
                           <DropdownMenuTrigger asChild>
-                            <button className={`w-3 h-6 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${hoveredWeekId === week.id || weekDropdownOpen === week.id ? 'opacity-100' : 'opacity-0'}`}>
+                            <button className={`w-3 h-7 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${hoveredWeekId === week.id || weekDropdownOpen === week.id ? 'opacity-100' : 'opacity-0'}`}>
                               <GripVertical className={`w-4 h-4 text-gray-500 ${weekDropdownOpen === week.id ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`} />
                             </button>
                           </DropdownMenuTrigger>

@@ -148,7 +148,7 @@ export function BandsGrid() {
     if (bandFormGroups.length === 0) return 1;
     
     const occupiedColumns = new Set(bandFormGroups.map(fg => fg.column));
-    for (let col = 1; col <= 20; col++) {
+    for (let col = 1; col <= 25; col++) {
       if (!occupiedColumns.has(col)) return col;
     }
     return null;
@@ -398,11 +398,12 @@ export function BandsGrid() {
   };
 
   const gridData = getGridData();
-  const columns = Array.from({ length: 20 }, (_, i) => i + 1);
+  const columns = Array.from({ length: 25 }, (_, i) => i + 1);
 
   return (
-    <div className="bg-gray-50">
-      <div className="bg-white border-b min-h-12 flex justify-between items-center px-4">
+    <div className="w-full flex flex-col bg-white">
+      {/* Fixed Toolbar */}
+      <div className="w-full bg-white border-b min-h-12 flex justify-between items-center px-4 shrink-0">
         <Button
           onClick={handleAddYearGroup}
           variant="default"
@@ -414,19 +415,19 @@ export function BandsGrid() {
         </Button>
       </div>
 
-      {/* Grid */}
-      <div className="overflow-auto bg-white">
-        <table className="text-xs w-full">
+      {/* Scrollable Grid Container */}
+      <div className="w-full overflow-x-auto flex-1">
+        <table className="w-full text-xs">
           <thead>
             <tr className="bg-gray-50">
-              <th className="border border-t-0 border-l-0 px-4 py-2 text-left font-semibold w-24 sticky left-0 bg-gray-50 z-10 whitespace-nowrap">
+              <th className="border border-t-0 border-l-0 px-4 text-left font-semibold bg-gray-50 min-w-28">
                 Year Group
               </th>
-              <th className="border border-t-0 px-4 py-2 text-left font-semibold w-24 sticky left-24 bg-gray-50 z-10">
+              <th className="border border-t-0 px-4 text-left font-semibold bg-gray-50 min-w-20">
                 Band
               </th>
               {columns.map(col => (
-                <th key={col} className="border border-t-0 px-2 py-2 text-center text-xs font-medium w-12">
+                <th key={col} className="border border-t-0 px-1 py-2 text-center text-xs font-medium w-11 min-w-11 max-w-11">
                   {col}
                 </th>
               ))}
@@ -444,11 +445,11 @@ export function BandsGrid() {
                         {bandIndex === 0 && (
                           <td
                             rowSpan={yearGroupBands.length}
-                            className="border border-l-0 px-4 py-2 font-medium bg-gray-50 align-center sticky left-0 z-10 group/yeargroup"
+                            className="border border-l-0 px-4 font-medium bg-gray-50 align-center relative group/yeargroup"
                             onMouseEnter={() => setHoveredYearGroupId(yearGroup.id)}
                             onMouseLeave={() => setHoveredYearGroupId(null)}
                           >
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-50">
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10">
                               <DropdownMenu
                                 onOpenChange={(open) =>
                                   setYearGroupDropdownOpen(open ? yearGroup.id : null)
@@ -456,32 +457,33 @@ export function BandsGrid() {
                               >
                                 <DropdownMenuTrigger asChild>
                                   <button
-                                    className={`w-3 h-6 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${
+                                    className={`w-3 h-7 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${
                                       hoveredYearGroupId === yearGroup.id ||
                                       yearGroupDropdownOpen === yearGroup.id
                                         ? 'opacity-100'
                                         : 'opacity-0'
                                     }`}
                                   >
-                                    <GripVertical className="w-4 h-4 text-gray-500" />
+                                    <GripVertical className={`w-4 h-4 text-gray-500 ${yearGroupDropdownOpen === yearGroup.id ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`} />
                                   </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="start">
                                   <DropdownMenuItem
                                     onClick={() => handleDuplicateYearGroup(yearGroup.id)}
+                                    className="text-xs"
                                   >
-                                    <Copy className="w-4 h-4 mr-2" />
+                                    <Copy className="size-3 mr-1.5" />
                                     Duplicate
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleAddBand(yearGroup.id)}>
-                                    <Plus className="w-4 h-4 mr-2" />
+                                  <DropdownMenuItem onClick={() => handleAddBand(yearGroup.id)} className="text-xs">
+                                    <Plus className="size-3 mr-1.5" />
                                     Add Band
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => handleDeleteYearGroup(yearGroup.id)}
-                                    className="text-red-600"
+                                    className="text-red-600 text-xs"
                                   >
-                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    <Trash2 className="text-red-600 size-3 mr-1.5" />
                                     Delete
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -491,11 +493,11 @@ export function BandsGrid() {
                           </td>
                         )}
                         <td
-                          className="border px-4 py-2 sticky left-24 bg-white hover:bg-gray-50 z-10 align-center group/band"
+                          className="border px-4 bg-white hover:bg-gray-50 align-center relative group/band"
                           onMouseEnter={() => setHoveredBandId(band.id)}
                           onMouseLeave={() => setHoveredBandId(null)}
                         >
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-50">
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10">
                             <DropdownMenu
                               onOpenChange={(open) =>
                                 setBandDropdownOpen(open ? band.id : null)
@@ -503,34 +505,36 @@ export function BandsGrid() {
                             >
                               <DropdownMenuTrigger asChild>
                                 <button
-                                  className={`w-3 h-6 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${
+                                  className={`w-3 h-7 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${
                                     hoveredBandId === band.id ||
                                     bandDropdownOpen === band.id
                                       ? 'opacity-100'
                                       : 'opacity-0'
                                   }`}
                                 >
-                                  <GripVertical className="w-4 h-4 text-gray-500" />
+                                  <GripVertical className={`w-4 h-4 text-gray-500 ${bandDropdownOpen === band.id ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`} />
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="start">
                                 <DropdownMenuItem
                                   onClick={() => openRenameBandDialog(band.id)}
+                                  className="text-xs"
                                 >
-                                  <Edit className="w-4 h-4 mr-2" />
+                                  <Edit className="size-3 mr-1.5" />
                                   Rename
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDuplicateBand(band.id)}
+                                  className="text-xs"
                                 >
-                                  <Copy className="w-4 h-4 mr-2" />
+                                  <Copy className="size-3 mr-1.5" />
                                   Duplicate
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDeleteBand(band.id)}
-                                  className="text-red-600"
+                                  className="text-red-600 text-xs"
                                 >
-                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  <Trash2 className="text-red-600 size-3 mr-1.5" />
                                   Delete
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -546,13 +550,13 @@ export function BandsGrid() {
                           if (formGroup) {
                             // Cell has a form group - show it with delete option
                             return (
-                              <td key={col} className="border p-0 hover:bg-blue-100">
+                              <td key={col} className="border p-0 bg-blue-100 hover:brightness-105">
                                 <Popover 
                                   open={popoverOpen === `${band.id}-${col}`}
                                   onOpenChange={(open) => setPopoverOpen(open ? `${band.id}-${col}` : null)}
                                 >
                                   <PopoverTrigger asChild>
-                                    <button className="w-full h-10 px-2 text-xs text-center hover:opacity-80 transition-opacity">
+                                    <button className="w-full h-7 px-2 text-xs text-center hover:opacity-80 transition-opacity">
                                       {formGroup.name}
                                     </button>
                                   </PopoverTrigger>
@@ -561,8 +565,8 @@ export function BandsGrid() {
                                       onClick={() => handleDeleteFormGroup(formGroup.id)}
                                       className="w-full px-3 py-2 flex items-center gap-2 text-left text-xs rounded hover:bg-red-100 text-red-600 transition-colors"
                                     >
-                                      <Trash2 className="w-4 h-4" />
-                                      Delete
+                                      <Trash2 className="w-4 h-4 inline mr-2" />
+                                      Clear
                                     </button>
                                   </PopoverContent>
                                 </Popover>
@@ -574,7 +578,7 @@ export function BandsGrid() {
                               <td key={col} className="border p-0">
                                 <button 
                                   onClick={() => handleQuickAddFormGroup(band.id, col)}
-                                  className="w-full h-10 hover:bg-gray-100 transition-colors"
+                                  className="w-full h-7 hover:bg-gray-100 transition-colors"
                                 >
                                   <Plus className="size-3 mx-auto text-gray-400" />
                                 </button>
@@ -584,7 +588,7 @@ export function BandsGrid() {
                             // Empty cell that's not next available
                             return (
                               <td key={col} className="border">
-                                <div className="h-10"></div>
+                                <div className="h-7"></div>
                               </td>
                             );
                           }
@@ -595,11 +599,11 @@ export function BandsGrid() {
                 ) : (
                   <tr>
                     <td
-                      className="border border-l-0 px-4 py-2 font-medium bg-gray-50 sticky left-0 z-10 group/yeargroup"
+                      className="border border-l-0 px-4 font-medium bg-gray-50 relative group/yeargroup"
                       onMouseEnter={() => setHoveredYearGroupId(yearGroup.id)}
                       onMouseLeave={() => setHoveredYearGroupId(null)}
                     >
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-50">
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10">
                         <DropdownMenu
                           onOpenChange={(open) =>
                             setYearGroupDropdownOpen(open ? yearGroup.id : null)
@@ -607,32 +611,33 @@ export function BandsGrid() {
                         >
                           <DropdownMenuTrigger asChild>
                             <button
-                              className={`w-3 h-6 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${
+                              className={`w-3 h-7 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${
                                 hoveredYearGroupId === yearGroup.id ||
                                 yearGroupDropdownOpen === yearGroup.id
                                   ? 'opacity-100'
                                   : 'opacity-0'
                               }`}
                             >
-                              <GripVertical className="w-4 h-4 text-gray-500" />
+                              <GripVertical className={`w-4 h-4 text-gray-500 ${yearGroupDropdownOpen === yearGroup.id ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`} />
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="start">
                             <DropdownMenuItem
                               onClick={() => handleDuplicateYearGroup(yearGroup.id)}
+                              className="text-xs"
                             >
-                              <Copy className="w-4 h-4 mr-2" />
+                              <Copy className="size-3 mr-1.5" />
                               Duplicate
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleAddBand(yearGroup.id)}>
-                              <Plus className="w-4 h-4 mr-2" />
+                            <DropdownMenuItem onClick={() => handleAddBand(yearGroup.id)} className="text-xs">
+                              <Plus className="size-3 mr-1.5" />
                               Add Band
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDeleteYearGroup(yearGroup.id)}
-                              className="text-red-600"
+                              className="text-red-600 text-xs"
                             >
-                              <Trash2 className="w-4 h-4 mr-2" />
+                              <Trash2 className="text-red-600 size-3 mr-1.5" />
                               Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -640,11 +645,8 @@ export function BandsGrid() {
                       </div>
                       {yearGroup.name}
                     </td>
-                    <td
-                      colSpan={26}
-                      className="border px-4 py-2 text-center text-gray-400 text-xs"
-                    >
-                      No bands added yet
+                    <td colSpan={31} className="border px-4 text-center text-gray-400 text-xs py-2">
+                      No bands added to this year group yet
                     </td>
                   </tr>
                 )}
@@ -652,10 +654,7 @@ export function BandsGrid() {
             ))}
             {gridData.length === 0 && (
               <tr>
-                <td
-                  colSpan={27}
-                  className="border border-l-0 px-4 py-8 text-center text-gray-500"
-                >
+                <td colSpan={32} className="border border-l-0 border-r-0 px-4 py-8 text-center text-gray-500">
                   No year groups added yet. Click "New Year Group" to get started.
                 </td>
               </tr>

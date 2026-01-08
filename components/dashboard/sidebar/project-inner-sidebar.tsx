@@ -204,32 +204,28 @@ export default function ProjectInnerSidebar({ orgId, projectId }: ProjectInnerSi
   }
 
   const isActive = (item: NavigationItem, sectionIndex: number, itemIndex: number) => {
-    const baseHref = item.href(orgId, projectId)
+  const baseHref = item.href(orgId, projectId)
 
-    // Special handling for Year Group tabs in Curriculum Model
-    if (activeSection === 'model' && sectionIndex === 0 && item.yearGroupId) {
-      const isOnModelRoot = pathname === `/dashboard/${orgId}/${projectId}/model`
-      if (!isOnModelRoot) return false
+  // Special handling for Year Group tabs in Curriculum Model
+  if (activeSection === 'model' && sectionIndex === 0 && item.yearGroupId) {
+    const isOnModelRoot = pathname === `/dashboard/${orgId}/${projectId}/model`
+    if (!isOnModelRoot) return false
 
-      if (yearGroupParam) {
-        return yearGroupParam === item.yearGroupId
-      }
-      // Default: first year group active when no param
-      return itemIndex === 0
+    if (yearGroupParam) {
+      return yearGroupParam === item.yearGroupId
     }
-
-    // For all other links (including other activities)
-    if (pathname.startsWith(baseHref)) {
-      return true
-    }
-
-    // Fallback: root model page with no sub-path and no yearGroup param
-    if (sectionIndex === 0 && itemIndex === 0 && pathname === `/dashboard/${orgId}/${projectId}/model` && !yearGroupParam) {
-      return true
-    }
-
-    return false
+    // Default: first year group active when no param
+    return itemIndex === 0
   }
+
+  // For Model "Other Activities" items, allow child routes
+  if (activeSection === 'model') {
+    return pathname === baseHref || pathname.startsWith(baseHref + '/')
+  }
+
+  // For all other sections (Cycle, Data), use exact matching
+  return pathname === baseHref
+}
 
   return (
     <div className="w-56 h-full border-r bg-white shrink-0">
