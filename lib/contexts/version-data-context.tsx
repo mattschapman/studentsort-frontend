@@ -4,6 +4,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useSearchParams, usePathname } from 'next/navigation';
 import { getVersionJson } from '@/app/dashboard/(projects)/[orgId]/[projectId]/_actions/get-version-json';
+import type { Block } from '@/app/dashboard/(projects)/[orgId]/[projectId]/model/_components/types';
 
 // Type definitions matching the JSON structure
 type Week = {
@@ -32,20 +33,20 @@ type CycleData = {
   periods: Period[];
 };
 
-type YearGroup = {
+export type YearGroup = {
   id: string;
   name: string;
   order: number;
 };
 
-type Band = {
+export type Band = {
   id: string;
   name: string;
   year_group_id: string;
   order: number;
 };
 
-type FormGroup = {
+export type FormGroup = {
   id: string;
   name: string;
   band_id: string;
@@ -57,7 +58,7 @@ type Department = {
   name: string;
 };
 
-type Subject = {
+export type Subject = {
   id: string;
   name: string;
   abbreviation: string;
@@ -102,7 +103,7 @@ type VersionJsonData = {
   cycle: CycleData;
   data: DataSection;
   model: {
-    blocks: any[];
+    blocks: Block[];
   };
   staffing: Record<string, any>;
   timetable: Record<string, any>;
@@ -139,6 +140,9 @@ interface VersionDataContextValue {
   updateSubjectsData: (subjects: Subject[]) => void;
   updateTeachersData: (teachers: Teacher[]) => void;
   updateTeacherAllocation: (teacherId: string, subjectId: string, value: number) => void;
+  addBlock: (block: Block) => void;
+  updateBlock: (blockId: string, updates: Partial<Block>) => void;
+  deleteBlock: (blockId: string) => void;
   getVersionJsonString: () => string;
 }
 
@@ -206,6 +210,14 @@ export function VersionDataProvider({ children }: VersionDataProviderProps) {
             ...teacher,
             subject_allocations: teacher.subject_allocations || {}
           }));
+        }
+
+        // Ensure model.blocks exists
+        if (!parsedData.model) {
+          parsedData.model = { blocks: [] };
+        }
+        if (!parsedData.model.blocks) {
+          parsedData.model.blocks = [];
         }
         
         setVersionData(parsedData);
@@ -341,6 +353,51 @@ export function VersionDataProvider({ children }: VersionDataProviderProps) {
     });
   }, []);
 
+  // Block management methods
+  const addBlock = useCallback((block: Block) => {
+    setVersionData(prev => {
+      if (!prev) return null;
+      
+      return {
+        ...prev,
+        model: {
+          ...prev.model,
+          blocks: [...(prev.model.blocks || []), block]
+        }
+      };
+    });
+  }, []);
+
+  const updateBlock = useCallback((blockId: string, updates: Partial<Block>) => {
+    setVersionData(prev => {
+      if (!prev) return null;
+      
+      return {
+        ...prev,
+        model: {
+          ...prev.model,
+          blocks: (prev.model.blocks || []).map(block =>
+            block.id === blockId ? { ...block, ...updates } : block
+          )
+        }
+      };
+    });
+  }, []);
+
+  const deleteBlock = useCallback((blockId: string) => {
+    setVersionData(prev => {
+      if (!prev) return null;
+      
+      return {
+        ...prev,
+        model: {
+          ...prev.model,
+          blocks: (prev.model.blocks || []).filter(block => block.id !== blockId)
+        }
+      };
+    });
+  }, []);
+
   const getVersionJsonString = useCallback(() => {
     if (!versionData) return '';
     return JSON.stringify(versionData, null, 2);
@@ -359,6 +416,9 @@ export function VersionDataProvider({ children }: VersionDataProviderProps) {
         updateSubjectsData,
         updateTeachersData,
         updateTeacherAllocation,
+        addBlock,
+        updateBlock,
+        deleteBlock,
         getVersionJsonString
       }}
     >

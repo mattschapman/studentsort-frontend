@@ -16,6 +16,7 @@ interface ProjectInnerSidebarProps {
 interface NavigationItem {
   label: string
   href: (orgId: string, projectId: string) => string
+  yearGroupId?: string
 }
 
 interface NavigationSection {
@@ -124,64 +125,53 @@ export default function ProjectInnerSidebar({ orgId, projectId }: ProjectInnerSi
   }
 
   // Helper to add version and yearGroup to href
-  const addParamsToHref = (href: string, includeYearGroup?: string) => {
+  const addParamsToHref = (href: string, yearGroupId?: string) => {
     const params = new URLSearchParams()
-    if (version) {
-      params.set('version', version)
-    }
-    if (includeYearGroup) {
-      params.set('yearGroup', includeYearGroup)
-    }
+    if (version) params.set('version', version)
+    if (yearGroupId) params.set('yearGroup', yearGroupId)
     const queryString = params.toString()
     return queryString ? `${href}?${queryString}` : href
   }
 
   // Build dynamic Model section data
-  const getModelSectionData = (): SectionData | null => {
-    // If loading, return structure with empty items (skeleton will be shown)
-    if (isLoading) {
+  const getModelSectionData = (): SectionData => {
+    const otherActivitiesItems: NavigationItem[] = [
+      {
+        label: "Staff Meetings",
+        href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/model/staff-meetings`,
+      },
+      {
+        label: "Form Time",
+        href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/model/form-time`,
+      },
+      {
+        label: "Extracurricular",
+        href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/model/extracurricular`,
+      },
+      {
+        label: "Break/Lunch Duty",
+        href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/model/break-duty`,
+      },
+    ]
+
+    // Loading or no year groups: show empty curriculum + other activities
+    if (isLoading || !versionData?.data?.year_groups || versionData.data.year_groups.length === 0) {
       return {
         title: "Model",
         sections: [
           {
             label: "CURRICULUM MODEL",
-            items: []
+            items: [] // Will render skeletons if loading
           },
           {
-            label: "OTHER",
-            items: [
-              {
-                label: "Other Activities",
-                href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/model/other-activities`,
-              },
-            ]
+            label: "OTHER ACTIVITIES",
+            items: otherActivitiesItems
           }
         ]
       }
     }
 
-    if (!versionData?.data?.year_groups) {
-      return {
-        title: "Model",
-        sections: [
-          {
-            label: "CURRICULUM MODEL",
-            items: []
-          },
-          {
-            label: "OTHER",
-            items: [
-              {
-                label: "Other Activities",
-                href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/model/other-activities`,
-              },
-            ]
-          }
-        ]
-      }
-    }
-
-    // Sort year groups by order
+    // Normal case: sort year groups and include other activities
     const sortedYearGroups = [...versionData.data.year_groups].sort((a, b) => a.order - b.order)
 
     return {
@@ -196,13 +186,8 @@ export default function ProjectInnerSidebar({ orgId, projectId }: ProjectInnerSi
           }))
         },
         {
-          label: "OTHER",
-          items: [
-            {
-              label: "Other Activities",
-              href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/model/other-activities`,
-            },
-          ]
+          label: "OTHER ACTIVITIES",
+          items: otherActivitiesItems
         }
       ]
     }
@@ -213,41 +198,36 @@ export default function ProjectInnerSidebar({ orgId, projectId }: ProjectInnerSi
     ? getModelSectionData()
     : (activeSection ? innerNavigationItems[activeSection] : null)
 
-  // Don't render inner sidebar if no active section
+  // Don't render if no active section
   if (!activeSection || !sectionData) {
     return null
   }
 
-  const isActive = (item: any, sectionIndex: number, itemIndex: number) => {
+  const isActive = (item: NavigationItem, sectionIndex: number, itemIndex: number) => {
     const baseHref = item.href(orgId, projectId)
-    
-    // Special handling for Model section with year groups
+
+    // Special handling for Year Group tabs in Curriculum Model
     if (activeSection === 'model' && sectionIndex === 0 && item.yearGroupId) {
-      // Check if we're on the model page (not other-activities)
-      const isOnModelPage = pathname === `/dashboard/${orgId}/${projectId}/model`
-      
-      if (!isOnModelPage) return false
-      
-      // If there's a yearGroup param, check if it matches
+      const isOnModelRoot = pathname === `/dashboard/${orgId}/${projectId}/model`
+      if (!isOnModelRoot) return false
+
       if (yearGroupParam) {
         return yearGroupParam === item.yearGroupId
       }
-      
-      // If no yearGroup param, the first item should be active
+      // Default: first year group active when no param
       return itemIndex === 0
     }
-    
-    // For other-activities or non-model sections
-    if (pathname === baseHref) {
+
+    // For all other links (including other activities)
+    if (pathname.startsWith(baseHref)) {
       return true
     }
-    
-    // Check if we're on the base section path and this is the first item
-    if (itemIndex === 0 && activeSection && !item.yearGroupId) {
-      const basePath = `/dashboard/${orgId}/${projectId}/${activeSection}`
-      return pathname === basePath
+
+    // Fallback: root model page with no sub-path and no yearGroup param
+    if (sectionIndex === 0 && itemIndex === 0 && pathname === `/dashboard/${orgId}/${projectId}/model` && !yearGroupParam) {
+      return true
     }
-    
+
     return false
   }
 
@@ -263,89 +243,47 @@ export default function ProjectInnerSidebar({ orgId, projectId }: ProjectInnerSi
         
         <Separator />
 
-        {/* Sectioned Navigation */}
+        {/* Navigation */}
         <nav className="space-y-0">
-          {activeSection === 'model' && isLoading ? (
-            /* Show loading skeleton for Curriculum Model section only */
-            <>
-              <div>
-                <div className="pt-4 pb-2 px-4.5">
-                  <h3 className="text-xs text-muted-foreground/80 tracking-wide">
-                    CURRICULUM MODEL
-                  </h3>
-                </div>
-                <div className="space-y-0.5 px-2 mb-4">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="py-1.5 px-2.5">
-                      <Skeleton className="h-4 w-full" />
-                    </div>
-                  ))}
-                </div>
-                <Separator className="my-2" />
-              </div>
-              
-              {/* Always show Other Activities section */}
-              <div>
-                <div className="pt-4 pb-2 px-4.5">
-                  <h3 className="text-xs text-muted-foreground/80 tracking-wide">
-                    OTHER
-                  </h3>
-                </div>
-                <div className="space-y-0.5 px-2 mb-4">
-                  <Link
-                    href={addVersionToHref(`/dashboard/${orgId}/${projectId}/model/other-activities`)}
-                    className={cn(
-                      "group flex items-center py-1.5 px-2.5 text-xs rounded-sm transition-colors",
-                      "hover:bg-accent hover:text-black",
-                      pathname === `/dashboard/${orgId}/${projectId}/model/other-activities`
-                        ? "font-bold text-black bg-accent" 
-                        : "font-medium text-muted-foreground"
-                    )}
-                  >
-                    <span className="truncate">
-                      Other Activities
-                    </span>
-                  </Link>
-                </div>
-              </div>
-            </>
-          ) : (
-            /* Normal rendering when not loading */
-            sectionData.sections.map((section, sectionIndex) => {
-              let itemIndex = 0
-              // Calculate the global index for this section's first item
-              for (let i = 0; i < sectionIndex; i++) {
-                itemIndex += sectionData.sections[i].items.length
-              }
+          {sectionData.sections.map((section, sectionIndex) => {
+            const hasItems = section.items.length > 0
+            const isCurriculumModelLoading = activeSection === 'model' && sectionIndex === 0 && isLoading
 
-              return (
-                <div key={section.label || `section-${sectionIndex}`}>
-                  {/* Section Header - only render if label exists */}
-                  {section.label && (
-                    <div className="pt-4 pb-2 px-4.5">
-                      <h3 className="text-xs text-muted-foreground/80 tracking-wide">
-                        {section.label}
-                      </h3>
-                    </div>
-                  )}
-                  
-                  {/* Section Items */}
-                  <div className={cn(
-                    "space-y-0.5 px-2 mb-4",
-                    // Add top padding if no label (to maintain spacing)
-                    !section.label && "pt-4"
-                  )}>
-                    {section.items.map((item: any, localIndex) => {
-                      const globalIndex = itemIndex + localIndex
-                      const baseHref = item.href(orgId, projectId)
-                      
-                      // Add appropriate params based on item type
+            return (
+              <div key={section.label || `section-${sectionIndex}`}>
+                {/* Section Header */}
+                {section.label && (
+                  <div className="pt-4 pb-2 px-4.5">
+                    <h3 className="text-xs text-muted-foreground/80 tracking-wide">
+                      {section.label}
+                    </h3>
+                  </div>
+                )}
+
+                {/* Items or Skeletons */}
+                <div className={cn(
+                  "space-y-0.5 px-2 mb-4",
+                  !section.label && "pt-4"
+                )}>
+                  {isCurriculumModelLoading ? (
+                    // Show skeletons only for Curriculum Model during load
+                    [...Array(6)].map((_, i) => (
+                      <div key={i} className="py-1.5 px-2.5">
+                        <Skeleton className="h-4 w-32" />
+                      </div>
+                    ))
+                  ) : hasItems ? (
+                    section.items.map((item, localIndex) => {
+                      const globalIndex = sectionData.sections
+                        .slice(0, sectionIndex)
+                        .reduce((acc, s) => acc + s.items.length, 0) + localIndex
+
                       const hrefWithParams = item.yearGroupId
-                        ? addParamsToHref(baseHref, item.yearGroupId)
-                        : addVersionToHref(baseHref)
-                      
+                        ? addParamsToHref(item.href(orgId, projectId), item.yearGroupId)
+                        : addVersionToHref(item.href(orgId, projectId))
+
                       const active = isActive(item, sectionIndex, globalIndex)
-                      
+
                       return (
                         <Link
                           key={item.label}
@@ -353,27 +291,23 @@ export default function ProjectInnerSidebar({ orgId, projectId }: ProjectInnerSi
                           className={cn(
                             "group flex items-center py-1.5 px-2.5 text-xs rounded-sm transition-colors",
                             "hover:bg-accent hover:text-black",
-                            active 
-                              ? "font-bold text-black bg-accent" 
+                            active
+                              ? "font-bold text-black bg-accent"
                               : "font-medium text-muted-foreground"
                           )}
                         >
-                          <span className="truncate">
-                            {item.label}
-                          </span>
+                          <span className="truncate">{item.label}</span>
                         </Link>
                       )
-                    })}
-                  </div>
-
-                  {/* Add separator after each section except the last one */}
-                  {sectionIndex < sectionData.sections.length - 1 && (
-                    <Separator className="my-2" />
-                  )}
+                    })
+                  ) : null}
                 </div>
-              )
-            })
-          )}
+
+                {/* Separator after section (except last) */}
+                {sectionIndex < sectionData.sections.length - 1 && <Separator className="my-2" />}
+              </div>
+            )
+          })}
         </nav>
       </div>
     </div>

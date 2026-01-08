@@ -187,6 +187,18 @@ export const columns = ({
       },
     },
     {
+      accessorKey: "max_working_days",
+      header: () => (
+        <div className="px-4">
+          Max Days
+        </div>
+      ),
+      cell: ({ row }) => {
+        const value = row.getValue("max_working_days") as number | null
+        return <div className="text-muted-foreground px-4">{value ?? "—"}</div>
+      },
+    },
+    {
       accessorKey: "max_teaching_periods",
       header: () => (
         <div className="px-4">
@@ -210,18 +222,6 @@ export const columns = ({
             {allocated}/{maxPeriods}
           </div>
         )
-      },
-    },
-    {
-      accessorKey: "max_working_days",
-      header: () => (
-        <div className="px-4">
-          Max Days
-        </div>
-      ),
-      cell: ({ row }) => {
-        const value = row.getValue("max_working_days") as number | null
-        return <div className="text-muted-foreground px-4">{value ?? "—"}</div>
       },
     },
     {
