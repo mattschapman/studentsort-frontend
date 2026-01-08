@@ -1,11 +1,13 @@
 // app/dashboard/(projects)/[orgId]/[projectId]/data/teachers/_components/teachers-columns.tsx
 "use client"
 
+import { useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal, Edit, Trash } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +32,62 @@ import { toast } from "sonner"
 import { useVersionData } from "@/lib/contexts/version-data-context"
 import { cn } from "@/lib/utils"
 
+// Separate component for allocation input to maintain focus
+function AllocationInput({
+  teacherId,
+  subjectId,
+  initialValue,
+  isEligible,
+  onAllocationChange,
+}: {
+  teacherId: string
+  subjectId: string
+  initialValue: number
+  isEligible: boolean
+  onAllocationChange: (teacherId: string, subjectId: string, value: number) => void
+}) {
+  const [localValue, setLocalValue] = useState(initialValue > 0 ? initialValue.toString() : "")
+
+  // Sync local state when initialValue changes from parent
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setLocalValue(value)
+  }
+
+  const handleBlur = () => {
+    const numValue = parseInt(localValue) || 0
+    onAllocationChange(teacherId, subjectId, numValue)
+    setLocalValue(numValue > 0 ? numValue.toString() : "")
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur()
+    }
+  }
+
+  return (
+    <Input
+      type="number"
+      min="0"
+      step="1"
+      disabled={!isEligible}
+      placeholder={isEligible ? "0" : "—"}
+      value={isEligible ? localValue : ""}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      className={cn(
+        "w-14 h-7 text-center text-xs! appearance-none!",
+        isEligible 
+          ? "border-neutral-300" 
+          : "border-neutral-200 bg-neutral-50 text-neutral-400 cursor-not-allowed"
+      )}
+      onFocus={(e) => e.target.select()}
+    />
+  )
+}
+
 interface ColumnsProps {
   onEdit: (teacher: Teacher) => void
   subjects: Array<{
@@ -44,10 +102,44 @@ interface ColumnsProps {
     name: string
     order: number
   }>
+  allocations: Record<string, Record<string, number>> // teacherId -> subjectId -> periods
+  onAllocationChange: (teacherId: string, subjectId: string, value: number) => void
 }
 
-export const columns = ({ onEdit, subjects, yearGroups }: ColumnsProps): ColumnDef<Teacher>[] => {
-  return [
+export const columns = ({ 
+  onEdit, 
+  subjects, 
+  yearGroups, 
+  allocations,
+  onAllocationChange 
+}: ColumnsProps): ColumnDef<Teacher>[] => {
+  
+  // Helper to get unique subjects a teacher is eligible for
+  const getEligibleSubjects = (teacher: Teacher): string[] => {
+    const uniqueSubjects = new Set<string>()
+    teacher.subject_year_group_eligibility.forEach(e => {
+      uniqueSubjects.add(e.subject_id)
+    })
+    return Array.from(uniqueSubjects)
+  }
+
+  // Helper to get total allocated periods for a teacher
+  const getTotalAllocated = (teacherId: string): number => {
+    if (!allocations[teacherId]) return 0
+    return Object.values(allocations[teacherId]).reduce((sum, val) => sum + val, 0)
+  }
+
+  // Helper to get total allocated periods for a subject across all teachers
+  const getSubjectTotal = (subjectId: string): number => {
+    let total = 0
+    Object.values(allocations).forEach(teacherAllocs => {
+      total += teacherAllocs[subjectId] || 0
+    })
+    return total
+  }
+
+  // Base columns (select, name, initials, max periods, max days)
+  const baseColumns: ColumnDef<Teacher>[] = [
     {
       id: "select",
       header: ({ table }) => (
@@ -66,7 +158,7 @@ export const columns = ({ onEdit, subjects, yearGroups }: ColumnsProps): ColumnD
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
           aria-label="Select row"
-          className="translate-y-0.5 translate-x-2] border-neutral-300"
+          className="translate-y-0.5 translate-x-2 border-neutral-300"
         />
       ),
       enableSorting: false,
@@ -74,37 +166,71 @@ export const columns = ({ onEdit, subjects, yearGroups }: ColumnsProps): ColumnD
     },
     {
       accessorKey: "name",
-      header: "Teacher Name",
+      header: () => (
+        <div className="px-4">
+          Name
+        </div>
+      ),
       cell: ({ row }) => {
-        return <div className="font-medium">{row.getValue("name")}</div>
+        return <div className="font-medium px-4">{row.getValue("name")}</div>
       },
     },
     {
       accessorKey: "initials",
-      header: "Initials",
+      header: () => (
+        <div className="px-4">
+          Initials
+        </div>
+      ),
       cell: ({ row }) => {
-        return <div className="text-muted-foreground">{row.getValue("initials")}</div>
+        return <div className="text-muted-foreground px-4">{row.getValue("initials")}</div>
       },
     },
     {
       accessorKey: "max_teaching_periods",
-      header: "Max Periods",
+      header: () => (
+        <div className="px-4">
+          Periods
+        </div>
+      ),
       cell: ({ row }) => {
-        const value = row.getValue("max_teaching_periods") as number | null
-        return <div className="text-muted-foreground">{value ?? "—"}</div>
+        const teacher = row.original
+        const maxPeriods = teacher.max_teaching_periods
+        const allocated = getTotalAllocated(teacher.id)
+        
+        if (maxPeriods === null) {
+          return <div className="text-muted-foreground px-4">—</div>
+        }
+        
+        return (
+          <div className={cn(
+            "px-4 font-medium",
+            allocated > maxPeriods && "text-destructive"
+          )}>
+            {allocated}/{maxPeriods}
+          </div>
+        )
       },
     },
     {
       accessorKey: "max_working_days",
-      header: "Max Days",
+      header: () => (
+        <div className="px-4">
+          Max Days
+        </div>
+      ),
       cell: ({ row }) => {
         const value = row.getValue("max_working_days") as number | null
-        return <div className="text-muted-foreground">{value ?? "—"}</div>
+        return <div className="text-muted-foreground px-4">{value ?? "—"}</div>
       },
     },
     {
       id: "eligibility_count",
-      header: "Eligible Subjects",
+      header: () => (
+        <div className="px-4">
+          Subjects
+        </div>
+      ),
       cell: ({ row }) => {
         const eligibility = row.original.subject_year_group_eligibility
         
@@ -121,7 +247,7 @@ export const columns = ({ onEdit, subjects, yearGroups }: ColumnsProps): ColumnD
         const allYearGroupIds = new Set(yearGroups.map(yg => yg.id))
         
         return (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-nowrap gap-2 px-4">
             {Array.from(subjectMap.entries()).map(([subjectId, yearGroupIds]) => {
               const subject = subjects.find(s => s.id === subjectId)
               if (!subject) return null
@@ -160,6 +286,55 @@ export const columns = ({ onEdit, subjects, yearGroups }: ColumnsProps): ColumnD
         )
       },
     },
+  ]
+
+  // Dynamic subject columns for period allocation
+  const subjectColumns: ColumnDef<Teacher>[] = subjects.map(subject => ({
+    id: `subject_allocation_${subject.id}`,
+    header: () => {
+      const total = getSubjectTotal(subject.id)
+      return (
+          <div className={cn(
+            "py-1 rounded text-xs font-medium whitespace-nowrap text-center",
+            subject.color_scheme
+          )}>
+            {subject.abbreviation}
+            {total > 0 && (
+            <span className="ml-1 text-xs text-muted-foreground font-normal">
+              {total}
+            </span>
+            )}
+          </div>
+      )
+    },
+    cell: ({ row }) => {
+      const teacher = row.original
+      const eligibleSubjects = getEligibleSubjects(teacher)
+      
+      // Check if teacher is eligible for this subject
+      const isEligible = eligibleSubjects.includes(subject.id)
+      
+      // Get current value from allocations (default to 0)
+      const currentValue = allocations[teacher.id]?.[subject.id] ?? 0
+      
+      return (
+        <div className="flex justify-center items-center h-full">
+          <AllocationInput
+            teacherId={teacher.id}
+            subjectId={subject.id}
+            initialValue={currentValue}
+            isEligible={isEligible}
+            onAllocationChange={onAllocationChange}
+          />
+        </div>
+      )
+    },
+    size: 80,
+    enableSorting: false,
+  }))
+
+  // Actions column
+  const actionsColumn: ColumnDef<Teacher>[] = [
     {
       id: "actions",
       cell: ({ row }) => {
@@ -226,4 +401,6 @@ export const columns = ({ onEdit, subjects, yearGroups }: ColumnsProps): ColumnD
       },
     },
   ]
+
+  return [...baseColumns, ...subjectColumns, ...actionsColumn]
 }

@@ -44,7 +44,17 @@ export function TeachersDataTable({
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null)
-  const { updateTeachersData } = useVersionData()
+  const { updateTeachersData, updateTeacherAllocation } = useVersionData()
+
+  // Build allocations object from teacher data for easier access in columns
+  const allocations: Record<string, Record<string, number>> = {}
+  teachers.forEach(teacher => {
+    allocations[teacher.id] = teacher.subject_allocations || {}
+  })
+
+  const handleAllocationChange = (teacherId: string, subjectId: string, value: number) => {
+    updateTeacherAllocation(teacherId, subjectId, value)
+  }
 
   const handleEdit = (teacher: Teacher) => {
     setSelectedTeacher(teacher)
@@ -88,7 +98,9 @@ export function TeachersDataTable({
         columns={columns({ 
           onEdit: handleEdit,
           subjects,
-          yearGroups
+          yearGroups,
+          allocations,
+          onAllocationChange: handleAllocationChange
         })}
         data={validTeachers}
         searchColumn="name"
