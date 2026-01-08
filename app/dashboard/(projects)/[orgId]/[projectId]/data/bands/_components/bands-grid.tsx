@@ -457,7 +457,7 @@ export function BandsGrid() {
                               >
                                 <DropdownMenuTrigger asChild>
                                   <button
-                                    className={`w-3 h-7 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${
+                                    className={`w-3 h-6 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${
                                       hoveredYearGroupId === yearGroup.id ||
                                       yearGroupDropdownOpen === yearGroup.id
                                         ? 'opacity-100'
@@ -505,7 +505,7 @@ export function BandsGrid() {
                             >
                               <DropdownMenuTrigger asChild>
                                 <button
-                                  className={`w-3 h-7 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${
+                                  className={`w-3 h-6 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${
                                     hoveredBandId === band.id ||
                                     bandDropdownOpen === band.id
                                       ? 'opacity-100'
@@ -611,7 +611,7 @@ export function BandsGrid() {
                         >
                           <DropdownMenuTrigger asChild>
                             <button
-                              className={`w-3 h-7 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${
+                              className={`w-3 h-6 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${
                                 hoveredYearGroupId === yearGroup.id ||
                                 yearGroupDropdownOpen === yearGroup.id
                                   ? 'opacity-100'
