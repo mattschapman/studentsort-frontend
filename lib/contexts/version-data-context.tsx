@@ -32,6 +32,35 @@ type CycleData = {
   periods: Period[];
 };
 
+type YearGroup = {
+  id: string;
+  name: string;
+  order: number;
+};
+
+type Band = {
+  id: string;
+  name: string;
+  year_group_id: string;
+  order: number;
+};
+
+type FormGroup = {
+  id: string;
+  name: string;
+  band_id: string;
+  column: number;
+};
+
+type DataSection = {
+  departments: any[];
+  subjects: any[];
+  year_groups: YearGroup[];
+  bands: Band[];
+  form_groups: FormGroup[];
+  teachers: any[];
+};
+
 type VersionJsonData = {
   metadata: {
     org_id: string;
@@ -44,14 +73,7 @@ type VersionJsonData = {
     created_by: string;
   };
   cycle: CycleData;
-  data: {
-    departments: any[];
-    subjects: any[];
-    year_groups: any[];
-    bands: any[];
-    form_groups: any[];
-    teachers: any[];
-  };
+  data: DataSection;
   model: {
     blocks: any[];
   };
@@ -85,6 +107,7 @@ interface VersionDataContextValue {
   error: string | null;
   hasUnsavedChanges: boolean;
   updateCycleData: (newCycleData: CycleData) => void;
+  updateBandsData: (yearGroups: YearGroup[], bands: Band[], formGroups: FormGroup[]) => void;
   getVersionJsonString: () => string;
 }
 
@@ -193,6 +216,25 @@ export function VersionDataProvider({ children }: VersionDataProviderProps) {
     });
   }, []);
 
+  const updateBandsData = useCallback((
+    yearGroups: YearGroup[], 
+    bands: Band[], 
+    formGroups: FormGroup[]
+  ) => {
+    setVersionData(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        data: {
+          ...prev.data,
+          year_groups: yearGroups,
+          bands: bands,
+          form_groups: formGroups
+        }
+      };
+    });
+  }, []);
+
   const getVersionJsonString = useCallback(() => {
     if (!versionData) return '';
     return JSON.stringify(versionData, null, 2);
@@ -206,6 +248,7 @@ export function VersionDataProvider({ children }: VersionDataProviderProps) {
         error,
         hasUnsavedChanges,
         updateCycleData,
+        updateBandsData,
         getVersionJsonString
       }}
     >
@@ -221,6 +264,8 @@ export function useVersionData() {
   }
   return context;
 }
+
+
 
 
 
@@ -318,14 +363,22 @@ export function useVersionData() {
 
 // interface VersionDataProviderProps {
 //   children: React.ReactNode;
-//   projectId: string;
-//   orgId: string;
 // }
 
-// export function VersionDataProvider({ children, projectId, orgId }: VersionDataProviderProps) {
+// export function VersionDataProvider({ children }: VersionDataProviderProps) {
 //   const searchParams = useSearchParams();
 //   const pathname = usePathname();
 //   const versionId = searchParams.get('version');
+  
+//   // Parse URL to get projectId and orgId
+//   const pathSegments = pathname?.split('/').filter(Boolean) ?? [];
+//   let projectId: string | undefined;
+//   let orgId: string | undefined;
+  
+//   if (pathSegments.length >= 3 && pathSegments[0] === 'dashboard') {
+//     orgId = pathSegments[1];
+//     projectId = pathSegments[2];
+//   }
   
 //   const [versionData, setVersionData] = useState<VersionJsonData | null>(null);
 //   const [initialVersionData, setInitialVersionData] = useState<VersionJsonData | null>(null);
@@ -338,11 +391,13 @@ export function useVersionData() {
 //     initialVersionData !== null && 
 //     JSON.stringify(versionData) !== JSON.stringify(initialVersionData);
 
-//   // Fetch version data when versionId changes
+//   // Fetch version data when versionId changes (only on project pages)
 //   useEffect(() => {
-//     if (!versionId) {
+//     // Clear state if not on a project page or no version selected
+//     if (!projectId || !versionId) {
 //       setVersionData(null);
 //       setInitialVersionData(null);
+//       setError(null);
 //       return;
 //     }
 
@@ -355,6 +410,8 @@ export function useVersionData() {
 
 //         if (!result.success) {
 //           setError(result.error || 'Failed to load version data');
+//           setVersionData(null);
+//           setInitialVersionData(null);
 //           return;
 //         }
 
@@ -364,13 +421,15 @@ export function useVersionData() {
 //       } catch (err) {
 //         console.error('Error fetching version data:', err);
 //         setError('An unexpected error occurred');
+//         setVersionData(null);
+//         setInitialVersionData(null);
 //       } finally {
 //         setIsLoading(false);
 //       }
 //     };
 
 //     fetchVersionData();
-//   }, [versionId]);
+//   }, [versionId, projectId]);
 
 //   // Warn about unsaved changes when navigating away
 //   useEffect(() => {
@@ -432,10 +491,4 @@ export function useVersionData() {
 //     throw new Error('useVersionData must be used within a VersionDataProvider');
 //   }
 //   return context;
-// }
-
-// // Optional version that returns null instead of throwing
-// export function useVersionDataOptional() {
-//   const context = useContext(VersionDataContext);
-//   return context ?? null;
 // }

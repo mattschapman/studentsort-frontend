@@ -69,7 +69,7 @@ const innerNavigationItems: Record<string, SectionData> = {
             href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/data/bands`,
           },
           {
-            label: "Students",
+            label: "Students (Optional)",
             href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/data/students`,
           },
         ]
