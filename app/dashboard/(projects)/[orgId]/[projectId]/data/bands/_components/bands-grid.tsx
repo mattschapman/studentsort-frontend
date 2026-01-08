@@ -148,7 +148,7 @@ export function BandsGrid() {
     if (bandFormGroups.length === 0) return 1;
     
     const occupiedColumns = new Set(bandFormGroups.map(fg => fg.column));
-    for (let col = 1; col <= 25; col++) {
+    for (let col = 1; col <= 20; col++) {
       if (!occupiedColumns.has(col)) return col;
     }
     return null;
@@ -398,7 +398,7 @@ export function BandsGrid() {
   };
 
   const gridData = getGridData();
-  const columns = Array.from({ length: 25 }, (_, i) => i + 1);
+  const columns = Array.from({ length: 20 }, (_, i) => i + 1);
 
   return (
     <div className="bg-gray-50">
@@ -576,7 +576,7 @@ export function BandsGrid() {
                                   onClick={() => handleQuickAddFormGroup(band.id, col)}
                                   className="w-full h-10 hover:bg-gray-100 transition-colors"
                                 >
-                                  <Plus className="w-4 h-4 mx-auto text-gray-400" />
+                                  <Plus className="size-3 mx-auto text-gray-400" />
                                 </button>
                               </td>
                             );

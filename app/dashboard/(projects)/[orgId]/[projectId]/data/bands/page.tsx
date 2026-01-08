@@ -2,5 +2,11 @@
 import { BandsGrid } from './_components/bands-grid';
 
 export default function Page() {
-  return <BandsGrid />;
+  return (
+  
+  <div className="w-full h-full bg-muted">
+    <BandsGrid />
+  </div>
+
+  )
 }
