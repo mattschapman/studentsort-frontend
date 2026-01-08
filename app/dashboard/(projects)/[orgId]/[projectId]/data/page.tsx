@@ -5,7 +5,9 @@ export default function Page() {
     return (
   
     <div className="w-full h-full bg-muted">
-        <CycleGrid />
+        <div className="w-full overflow-x-scroll bg-white">
+          <CycleGrid />
+        </div>
     </div>
     )
 }

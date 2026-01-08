@@ -182,7 +182,7 @@ export function CycleGrid() {
     if (periodsForDay.length === 0) return 1;
     
     const occupiedColumns = new Set(periodsForDay.map(p => p.column));
-    for (let col = 1; col <= 20; col++) {
+    for (let col = 1; col <= 30; col++) {
       if (!occupiedColumns.has(col)) return col;
     }
     return null; // All columns occupied
@@ -441,11 +441,12 @@ export function CycleGrid() {
   };
 
   const gridData = getGridData();
-  const columns = Array.from({ length: 20 }, (_, i) => i + 1);
+  const columns = Array.from({ length: 30 }, (_, i) => i + 1);
 
   return (
-    <div className="w-full">
-      <div className="w-full bg-white border-b min-h-12 flex justify-between items-center px-4">
+    <div className="w-full h-full flex flex-col bg-white">
+      {/* Fixed Toolbar */}
+      <div className="w-full bg-white border-b min-h-12 flex justify-between items-center px-4 shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button size="xs" variant="default" className="text-xs">
@@ -464,15 +465,15 @@ export function CycleGrid() {
         </DropdownMenu>
       </div>
 
-      {/* Grid */}
-      <div className="bg-white">
+      {/* Scrollable Grid Container */}
+      <div className="w-full overflow-x-auto flex-1">
         <table className="w-full text-xs">
           <thead>
             <tr className="bg-gray-50">
-              <th className="border border-t-0 border-l-0 px-4 text-left font-semibold w-20 sticky left-0 bg-gray-50 z-10">Week</th>
-              <th className="border border-t-0 px-4 text-left font-semibold w-20 sticky left-20 bg-gray-50 z-10">Day</th>
+              <th className="border border-t-0 border-l-0 px-4 text-left font-semibold bg-gray-50 min-w-20">Week</th>
+              <th className="border border-t-0 px-4 text-left font-semibold bg-gray-50 min-w-30">Day</th>
               {columns.map(col => (
-                <th key={col} className="border border-t-0 px-2 py-2 text-center text-xs font-medium w-8">
+                <th key={col} className="border border-t-0 px-1 py-2 text-center text-xs font-medium w-9 min-w-9 max-w-9">
                   {col}
                 </th>
               ))}
@@ -485,16 +486,16 @@ export function CycleGrid() {
                   days.map((dayData, dayIndex) => (
                     <tr 
                       key={dayData.day.id} 
-                      className={`hover:bg-gray-50`}
+                      className="hover:bg-gray-50"
                     >
                       {dayIndex === 0 && (
                         <td
                           rowSpan={days.length}
-                          className={`border border-l-0 px-4 font-medium bg-gray-50 align-center sticky left-0 z-10 group/week`}
+                          className="border border-l-0 px-4 font-medium bg-gray-50 align-center relative group/week"
                           onMouseEnter={() => setHoveredWeekId(week.id)}
                           onMouseLeave={() => setHoveredWeekId(null)}
                         >
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-50">
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10">
                             <DropdownMenu onOpenChange={(open) => setWeekDropdownOpen(open ? week.id : null)}>
                               <DropdownMenuTrigger asChild>
                                 <button className={`w-3 h-6 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${hoveredWeekId === week.id || weekDropdownOpen === week.id ? 'opacity-100' : 'opacity-0'}`}>
@@ -502,15 +503,15 @@ export function CycleGrid() {
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="start">
-                                <DropdownMenuItem onClick={() => handleDuplicateWeek(week.id)}>
-                                  <Copy className="w-4 h-4 mr-2" />
+                                <DropdownMenuItem onClick={() => handleDuplicateWeek(week.id)} className="text-xs">
+                                  <Copy className="size-3 mr-1.5" />
                                   Duplicate
                                 </DropdownMenuItem>
                                 <DropdownMenuItem 
                                   onClick={() => handleDeleteWeek(week.id)}
-                                  className="text-red-600"
+                                  className="text-red-600 text-xs"
                                 >
-                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  <Trash2 className="text-red-600 size-3 mr-1.5" />
                                   Delete
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -520,11 +521,11 @@ export function CycleGrid() {
                         </td>
                       )}
                       <td 
-                        className="border px-4 sticky left-24 bg-white hover:bg-gray-50 z-10 align-center group/day"
+                        className="border px-4 bg-white hover:bg-gray-50 align-center relative group/day"
                         onMouseEnter={() => setHoveredRowId(dayData.day.id)}
                         onMouseLeave={() => setHoveredRowId(null)}
                       >
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-50">
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10">
                           <DropdownMenu onOpenChange={(open) => setDayDropdownOpen(open ? dayData.day.id : null)}>
                             <DropdownMenuTrigger asChild>
                               <button className={`w-3 h-6 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${hoveredRowId === dayData.day.id || dayDropdownOpen === dayData.day.id ? 'opacity-100' : 'opacity-0'}`}>
@@ -532,15 +533,15 @@ export function CycleGrid() {
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start">
-                              <DropdownMenuItem onClick={() => handleDuplicateDay(dayData.day.id)}>
-                                <Copy className="w-4 h-4 mr-2" />
+                              <DropdownMenuItem onClick={() => handleDuplicateDay(dayData.day.id)} className="text-xs">
+                                <Copy className="size-3 mr-1.5" />
                                 Duplicate
                               </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={() => handleDeleteDay(dayData.day.id)}
-                                className="text-red-600"
+                                className="text-red-600 text-xs"
                               >
-                                <Trash2 className="w-4 h-4 mr-2" />
+                                <Trash2 className="text-red-600 size-3 mr-1.5" />
                                 Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -562,10 +563,8 @@ export function CycleGrid() {
                                 onOpenChange={(open) => setPopoverOpen(open ? `${dayData.day.id}-${col}` : null)}
                               >
                                 <PopoverTrigger asChild>
-                                  <button className="w-full h-8 hover:opacity-80 transition-opacity">
+                                  <button className="w-full h-6 hover:opacity-80 transition-opacity">
                                   </button>
-                                  {/* <Button variant="ghost" className="w-full h-10 p-0 hover:opacity-80">
-                                  </Button> */}
                                 </PopoverTrigger>
                                 <PopoverContent className="w-48 p-1">
                                   <div className="space-y-1">
@@ -600,12 +599,9 @@ export function CycleGrid() {
                                 onOpenChange={(open) => setPopoverOpen(open ? `${dayData.day.id}-${col}` : null)}
                               >
                                 <PopoverTrigger asChild>
-                                  <button className="w-full h-8 hover:bg-gray-100 transition-colors">
+                                  <button className="w-full h-6 hover:bg-gray-100 transition-colors">
                                     <Plus className="size-3 mx-auto text-gray-400" />
                                   </button>
-                                  {/* <Button variant="ghost" className="w-full h-full p-0 hover:opacity-80">
-                                    <Plus className="size-3 mx-auto text-gray-400" />
-                                  </Button> */}
                                 </PopoverTrigger>
                                 <PopoverContent className="w-48 p-1">
                                   <div className="space-y-1">
@@ -627,7 +623,7 @@ export function CycleGrid() {
                           // Empty cell that's not next available
                           return (
                             <td key={col} className="border">
-                              <div className="h-10"></div>
+                              <div className="h-6"></div>
                             </td>
                           );
                         }
@@ -637,11 +633,11 @@ export function CycleGrid() {
                 ) : (
                   <tr>
                     <td 
-                      className={`border border-l-0 px-4 font-medium bg-gray-50 sticky left-0 z-10 group/week`}
+                      className="border border-l-0 px-4 font-medium bg-gray-50 relative group/week"
                       onMouseEnter={() => setHoveredWeekId(week.id)}
                       onMouseLeave={() => setHoveredWeekId(null)}
                     >
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-50">
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10">
                         <DropdownMenu onOpenChange={(open) => setWeekDropdownOpen(open ? week.id : null)}>
                           <DropdownMenuTrigger asChild>
                             <button className={`w-3 h-6 flex items-center justify-center hover:bg-gray-200 rounded bg-white border border-gray-300 transition-opacity shadow-sm ${hoveredWeekId === week.id || weekDropdownOpen === week.id ? 'opacity-100' : 'opacity-0'}`}>
@@ -649,15 +645,15 @@ export function CycleGrid() {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="start">
-                            <DropdownMenuItem onClick={() => handleDuplicateWeek(week.id)}>
-                              <Copy className="w-4 h-4 mr-2" />
+                            <DropdownMenuItem onClick={() => handleDuplicateWeek(week.id)} className="text-xs">
+                              <Copy className="size-3 mr-1.5" />
                               Duplicate
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleDeleteWeek(week.id)}
-                              className="text-red-600"
+                              className="text-red-600 text-xs"
                             >
-                              <Trash2 className="w-4 h-4 mr-2" />
+                              <Trash2 className="text-red-600 size-3 mr-1.5" />
                               Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -665,7 +661,7 @@ export function CycleGrid() {
                       </div>
                       {week.name}
                     </td>
-                    <td colSpan={26} className="border px-4 text-center text-gray-400 text-xs">
+                    <td colSpan={31} className="border px-4 text-center text-gray-400 text-xs py-2">
                       No days added to this week yet
                     </td>
                   </tr>
@@ -674,7 +670,7 @@ export function CycleGrid() {
             ))}
             {gridData.length === 0 && (
               <tr>
-                <td colSpan={27} className="border border-l-0 border-r-0 px-4 py-8 text-center text-gray-500">
+                <td colSpan={32} className="border border-l-0 border-r-0 px-4 py-8 text-center text-gray-500">
                   No weeks added yet. Click "New" to get started.
                 </td>
               </tr>
