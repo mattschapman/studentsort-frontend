@@ -5,7 +5,6 @@ import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
-// import { navigationSections } from "./project-outer-sidebar"
 
 interface ProjectInnerSidebarProps {
   orgId: string
@@ -28,9 +27,40 @@ interface SectionData {
 }
 
 const innerNavigationItems: Record<string, SectionData> = {
+  cycle: {
+    title: "Cycle",
+    sections: [
+      {
+        label: "CONFIGURE",
+        items: [
+          {
+            label: "Periods",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/cycle`
+          },
+          {
+            label: "Timings (Optional)",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/cycle/timings`
+          },
+          {
+            label: "Settings",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/cycle/settings`
+          }
+        ]
+      }
+    ]
+  },
   data: {
     title: "Data",
     sections: [
+      {
+        label: "CYCLE",
+        items: [
+          {
+            label: "Periods",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/data`
+          },
+        ]
+      },
       {
         label: "COHORTS",
         items: [
@@ -104,6 +134,7 @@ export default function ProjectInnerSidebar({ orgId, projectId }: ProjectInnerSi
 
   // Determine which section is active based on pathname
   const getActiveSection = (): keyof typeof innerNavigationItems | null => {
+    if (pathname.includes('/cycle')) return 'cycle'
     if (pathname.includes('/data')) return 'data'
     if (pathname.includes('/model')) return 'model'
     return null

@@ -1,5 +1,7 @@
+import { CycleGrid } from "./_components/cycle-grid";
+
 export default function Page() {
     return (
-        <p>Placeholder</p>
+        <CycleGrid />
     )
 }

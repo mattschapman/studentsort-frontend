@@ -36,7 +36,7 @@ export const navigationSections = [
         icon: Home,
         href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}`,
         exactMatch: true,
-        hasInnerSidebar: true,
+        hasInnerSidebar: false,
         isBackButton: false,
         preserveVersion: true,
       },
@@ -44,16 +44,15 @@ export const navigationSections = [
   },
   {
     items: [
-
-      {
-        label: "Cycle",
-        icon: Grid,
-        href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/cycle`,
-        exactMatch: false,
-        hasInnerSidebar: false,
-        isBackButton: false,
-        preserveVersion: true,
-      },
+      // {
+      //   label: "Cycle",
+      //   icon: Grid,
+      //   href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/cycle`,
+      //   exactMatch: false,
+      //   hasInnerSidebar: true,
+      //   isBackButton: false,
+      //   preserveVersion: true,
+      // },
       {
         label: "Data",
         icon: Database,
@@ -63,7 +62,7 @@ export const navigationSections = [
         isBackButton: false,
         preserveVersion: true,
       },
-            {
+      {
         label: "Model",
         icon: Box,
         href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/model`,
