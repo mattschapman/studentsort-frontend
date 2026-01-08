@@ -44,15 +44,6 @@ export const navigationSections = [
   },
   {
     items: [
-      // {
-      //   label: "Cycle",
-      //   icon: Grid,
-      //   href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/cycle`,
-      //   exactMatch: false,
-      //   hasInnerSidebar: true,
-      //   isBackButton: false,
-      //   preserveVersion: true,
-      // },
       {
         label: "Data",
         icon: Database,
