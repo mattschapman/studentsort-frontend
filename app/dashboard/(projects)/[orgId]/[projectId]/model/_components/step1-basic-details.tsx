@@ -148,51 +148,53 @@ export function Step1BasicDetails({
         />
       </div>
 
-      <div className="space-y-2">
-        <Label>
-          Teaching periods <span className="text-destructive">*</span>
-        </Label>
-        <Input
-          type="number"
-          placeholder="e.g. 5"
-          value={formData.teachingPeriods}
-          onChange={(e) => onChange({ 
-            teachingPeriods: e.target.value,
-            periodBreakdown: '' 
-          })}
-          min="1"
-        />
-      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label>
+            Teaching periods <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            type="number"
+            placeholder="e.g. 5"
+            value={formData.teachingPeriods}
+            onChange={(e) => onChange({ 
+              teachingPeriods: e.target.value,
+              periodBreakdown: '' 
+            })}
+            min="1"
+          />
+        </div>
 
-      <div className="space-y-2">
-        <Label>
-          Lessons <span className="text-destructive">*</span>
-        </Label>
-        <Select
-          value={formData.periodBreakdown}
-          onValueChange={(value) => onChange({ periodBreakdown: value })}
-          disabled={periodBreakdownOptions.length === 0}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select lesson structure" />
-          </SelectTrigger>
-          <SelectContent>
-            {periodBreakdownOptions.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+        <div className="space-y-2">
+          <Label>
+            Lessons <span className="text-destructive">*</span>
+          </Label>
+          <Select
+            value={formData.periodBreakdown}
+            onValueChange={(value) => onChange({ periodBreakdown: value })}
+            disabled={periodBreakdownOptions.length === 0}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select lesson structure" />
+            </SelectTrigger>
+            <SelectContent>
+              {periodBreakdownOptions.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div className="space-y-2">
-        <Label>Color scheme</Label>
-        <ColorPicker
-          value={formData.colorScheme}
-          onValueChange={(value) => onChange({ colorScheme: value })}
-          subjectAbbreviation={formData.title.slice(0, 3) || "Blk"}
-        />
+        <div className="space-y-2">
+          <Label>Color scheme</Label>
+          <ColorPicker
+            value={formData.colorScheme}
+            onValueChange={(value) => onChange({ colorScheme: value })}
+            subjectAbbreviation={formData.title.slice(0, 3) || "Blk"}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
