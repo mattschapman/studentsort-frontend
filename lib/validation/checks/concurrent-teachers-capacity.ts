@@ -153,8 +153,8 @@ export const checkConcurrentTeachersCapacity: CheckFunction = (context: Validati
 
       issues.push({
         id: generateShortId(),
-        type: 'error',
-        severity: 'critical',
+        type: 'warning',
+        severity: 'medium',
         title: 'Insufficient Teachers for Concurrent Classes',
         description: `${subjectName} in ${block.title || block.id}`,
         details: `The block structure requires more ${subjectName} teachers than are available to teach concurrent classes.\n\nAvailable ${subjectName} teachers: ${teachersPerSubject[subjectId] || 0}\nMeta periods with violations: ${totalViolations}\n\nViolations:\n${violationDetails}`,

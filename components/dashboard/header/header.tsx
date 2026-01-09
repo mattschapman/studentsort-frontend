@@ -170,7 +170,7 @@ export default function DashboardHeader({
           )}
 
           {/* Insights button - only show on project pages */}
-          {showPanelButtons && (
+          {/* {showPanelButtons && (
             <Button
               variant="outline"
               size="icon"
@@ -180,7 +180,7 @@ export default function DashboardHeader({
             >
               <Telescope className="h-4 w-4" />
             </Button>
-          )}
+          )} */}
           
           <UserDropdown 
             user={{

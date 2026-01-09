@@ -76,8 +76,8 @@ export const checkTeachingHoursAvailability: CheckFunction = (context: Validatio
       
       issues.push({
         id: generateShortId(),
-        type: 'error',
-        severity: 'high',
+        type: 'warning',
+        severity: 'medium',
         title: 'Insufficient Teaching Hours',
         description: `${subject.name}`,
         details: `There are insufficient teaching hours available to deliver all ${subject.name} lessons.\n\nRequired: ${required} periods\nAvailable: ${available} periods\nShortfall: ${shortfall} periods`,

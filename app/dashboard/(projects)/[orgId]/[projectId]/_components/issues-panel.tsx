@@ -153,7 +153,7 @@ export default function IssuesPanel() {
         </div>
 
         {/* Detail Content */}
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-auto px-5 py-3">
           <div className="space-y-6">
             <div className="pt-2 flex flex-col gap-2">
               <h4 className="font-semibold text-sm">Details</h4>

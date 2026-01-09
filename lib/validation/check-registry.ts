@@ -3,6 +3,7 @@
 import type { CheckDefinition } from './types';
 import { checkTeachingHoursAvailability } from './checks/teaching-hours-availability';
 import { checkConcurrentTeachersCapacity } from './checks/concurrent-teachers-capacity';
+import { checkFormGroupPeriodCoverage } from './checks/form-group-period-coverage';
 
 /**
  * Central registry of all validation checks.
@@ -39,6 +40,18 @@ export const CHECK_REGISTRY: CheckDefinition[] = [
       requiresSubjects: true,
     },
     check: checkConcurrentTeachersCapacity,
+  },
+  {
+    id: 'form-group-period-coverage',
+    name: 'Form Group Period Coverage',
+    description: 'Validates that form group block periods match the total lesson periods in the cycle',
+    category: 'model',
+    prerequisites: {
+      requiresBlocks: true,
+      requiresFormGroups: true,
+      requiresCycle: true,
+    },
+    check: checkFormGroupPeriodCoverage,
   },
   // Future checks can be added here
   // {
