@@ -298,10 +298,10 @@ export function Step2TeachingGroups({
         <div className="flex flex-col gap-1">
           <h3 className="text-md font-medium">Teaching groups</h3>
           <p className="text-sm text-muted-foreground">
-            Add details of the teaching groups
+            A "teaching group" is a group of students who will be taught together for all lessons in the block. Within a teaching group, each subject should be entered as a separate "class".
           </p>
         </div>
-        <Button
+        {/* <Button
           type="button"
           variant="outline"
           size="sm"
@@ -310,7 +310,7 @@ export function Step2TeachingGroups({
         >
           <Plus className="w-4 h-4" />
           Add teaching group
-        </Button>
+        </Button> */}
       </div>
 
       <div className="space-y-4">
@@ -392,10 +392,10 @@ export function Step2TeachingGroups({
                 </CardHeader>
 
                 <CollapsibleContent>
-                  <CardContent className="space-y-4">
+                  <CardContent className="mt-2 space-y-6">
                     {/* Teaching group title */}
                     <div className="space-y-2">
-                      <Label>Teaching group title</Label>
+                      <Label className="gap-0.5">Name<span className="text-destructive">*</span></Label>
                       <Input
                         placeholder="e.g. 7-Ma-1, 7R1"
                         value={teachingGroup.title}
@@ -406,10 +406,10 @@ export function Step2TeachingGroups({
                     </div>
 
                     {/* Classes */}
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label>Classes</Label>
-                        <Button
+                        <Label className="gap-0.5">Classes<span className="text-destructive">*</span></Label>
+                        {/* <Button
                           type="button"
                           variant="outline"
                           size="sm"
@@ -418,7 +418,7 @@ export function Step2TeachingGroups({
                         >
                           <Plus className="w-4 h-4" />
                           Add class
-                        </Button>
+                        </Button> */}
                       </div>
 
                       {teachingGroup.classes.map((classData, classIndex) => {
@@ -433,30 +433,30 @@ export function Step2TeachingGroups({
                               <div className="flex items-center gap-2">
                                 <Button
                                   type="button"
-                                  variant="ghost"
+                                  variant="outline"
                                   size="sm"
                                   onClick={() => cloneClass(teachingGroup.id, classData.id)}
-                                  className="flex items-center gap-1 h-7"
+                                  className="flex items-center gap-1"
                                 >
                                   <Copy className="w-3 h-3" />
-                                  Clone
+                                  {/* Clone */}
                                 </Button>
                                 <Button
                                   type="button"
-                                  variant="ghost"
+                                  variant="outline"
                                   size="sm"
                                   onClick={() => removeClass(teachingGroup.id, classData.id)}
-                                  className="flex items-center gap-1 h-7"
+                                  className="flex items-center gap-1"
                                 >
                                   <X className="w-3 h-3" />
-                                  Remove
+                                  {/* Remove */}
                                 </Button>
                               </div>
                             </div>
 
                             <div className="grid grid-cols-9 gap-2">
                               <div className="col-span-3 space-y-2">
-                                <Label>Subject</Label>
+                                <Label className="gap-0.5">Subject<span className="text-destructive">*</span></Label>
                                 <Select
                                   value={classData.subjectId}
                                   onValueChange={(value) =>
@@ -480,7 +480,7 @@ export function Step2TeachingGroups({
                               </div>
 
                               <div className="col-span-2 space-y-2">
-                                <Label>Class title</Label>
+                                <Label className="gap-0.5">Name<span className="text-destructive">*</span></Label>
                                 <Input
                                   placeholder="e.g. 7-Ma-1"
                                   value={classData.title}
@@ -491,7 +491,7 @@ export function Step2TeachingGroups({
                               </div>
 
                               <div className="col-span-2 space-y-2">
-                                <Label>Periods</Label>
+                                <Label className="gap-0.5">Periods<span className="text-destructive">*</span></Label>
                                 <Input
                                   type="number"
                                   placeholder="e.g. 5"
@@ -509,7 +509,7 @@ export function Step2TeachingGroups({
                               </div>
 
                               <div className="col-span-2 space-y-2">
-                                <Label>Lessons</Label>
+                                <Label className="gap-0.5">Lessons<span className="text-destructive">*</span></Label>
                                 <Select
                                   value={classData.periodBreakdown}
                                   onValueChange={(value) =>

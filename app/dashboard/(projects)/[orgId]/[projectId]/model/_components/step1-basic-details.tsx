@@ -138,7 +138,7 @@ export function Step1BasicDetails({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>
+        <Label className="gap-0.5">
           Title <span className="text-destructive">*</span>
         </Label>
         <Input
@@ -150,7 +150,7 @@ export function Step1BasicDetails({
 
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label>
+          <Label className="gap-0.5">
             Teaching periods <span className="text-destructive">*</span>
           </Label>
           <Input
@@ -166,15 +166,15 @@ export function Step1BasicDetails({
         </div>
 
         <div className="space-y-2">
-          <Label>
-            Lessons <span className="text-destructive">*</span>
+          <Label className="gap-0.5">
+            Lesson breakdown<span className="text-destructive">*</span>
           </Label>
           <Select
             value={formData.periodBreakdown}
             onValueChange={(value) => onChange({ periodBreakdown: value })}
             disabled={periodBreakdownOptions.length === 0}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select lesson structure" />
             </SelectTrigger>
             <SelectContent>
@@ -188,7 +188,7 @@ export function Step1BasicDetails({
         </div>
 
         <div className="space-y-2">
-          <Label>Color scheme</Label>
+          <Label className="gap-0.5">Color scheme <span className="text-destructive">*</span></Label>
           <ColorPicker
             value={formData.colorScheme}
             onValueChange={(value) => onChange({ colorScheme: value })}
@@ -199,7 +199,7 @@ export function Step1BasicDetails({
 
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label>Start column</Label>
+          <Label className="gap-0.5">Start column <span className="text-destructive">*</span></Label>
           <Input
             type="number"
             placeholder="e.g. 1"
@@ -210,7 +210,7 @@ export function Step1BasicDetails({
         </div>
 
         <div className="space-y-2">
-          <Label>Start row</Label>
+          <Label className="gap-0.5">Start row <span className="text-destructive">*</span></Label>
           <Input
             type="number"
             placeholder="e.g. 1"
@@ -221,7 +221,7 @@ export function Step1BasicDetails({
         </div>
 
         <div className="space-y-2">
-          <Label>End row</Label>
+          <Label className="gap-0.5">End row <span className="text-destructive">*</span></Label>
           <Input
             type="number"
             placeholder="e.g. 4"
@@ -234,7 +234,7 @@ export function Step1BasicDetails({
 
       {/* Form groups selection */}
       <div className="space-y-2">
-        <Label>
+        <Label className="gap-0.5">
           Feeder form groups <span className="text-destructive">*</span>
         </Label>
         <div className="space-y-2 max-h-60 overflow-auto border rounded-md p-3">

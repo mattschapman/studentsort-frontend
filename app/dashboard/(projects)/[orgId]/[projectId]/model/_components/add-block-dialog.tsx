@@ -338,6 +338,15 @@ export function AddBlockDialog({
           {/* Footer */}
           <DialogFooter className="flex items-center justify-between">
             <div className="flex gap-2">
+              {step === 1 && (
+                <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              )}
               {step > 1 && (
                 <Button
                   type="button"
@@ -350,13 +359,6 @@ export function AddBlockDialog({
               )}
             </div>
             <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOpenChange(false)}
-              >
-                Cancel
-              </Button>
               {step < 3 ? (
                 <Button
                   type="button"

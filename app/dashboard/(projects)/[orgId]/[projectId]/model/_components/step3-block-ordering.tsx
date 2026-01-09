@@ -1,16 +1,19 @@
 // app/dashboard/(projects)/[orgId]/[projectId]/model/_components/step3-block-ordering.tsx
-
 "use client";
 
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
 import type { BlockFormData } from "./types";
 import type { Subject } from "@/lib/contexts/version-data-context";
 import { getTailwindColorValue, generateId } from "./utils";
@@ -45,6 +48,8 @@ export function Step3BlockOrdering({
   onChange,
   subjects,
 }: Step3BlockOrderingProps) {
+  const [openPopovers, setOpenPopovers] = useState<Record<string, boolean>>({});
+
   // Build meta lessons and periods from period breakdown
   const metaLessons = useMemo<MetaLessonData[]>(() => {
     if (!formData.periodBreakdown) return [];
@@ -94,7 +99,7 @@ export function Step3BlockOrdering({
     return lessons;
   }, [formData.teachingGroups]);
 
-  // Auto-assign lessons to meta periods if not already mapped - using useEffect instead of useMemo
+  // Auto-assign lessons to meta periods if not already mapped
   useEffect(() => {
     if (Object.keys(formData.lessonMappings).length === 0 && allLessons.length > 0 && metaLessons.length > 0) {
       const mappings: Record<string, string> = {};
@@ -156,9 +161,9 @@ export function Step3BlockOrdering({
   };
 
   // Handle lesson assignment
-  const handleAssignLesson = (lessonId: string, periodId: string) => {
+  const handleAssignLesson = (lessonId: string, periodId: string, popoverKey: string) => {
     if (lessonId === NONE_VALUE) {
-      // Clear the assignment - find and remove the lesson from this period
+      // Clear the assignment
       const updatedMappings = { ...formData.lessonMappings };
       Object.keys(updatedMappings).forEach(key => {
         if (updatedMappings[key] === periodId) {
@@ -193,10 +198,16 @@ export function Step3BlockOrdering({
       
       onChange({ lessonMappings: updatedMappings });
     }
+    
+    // Close the popover
+    setOpenPopovers(prev => ({ ...prev, [popoverKey]: false }));
   };
 
   // Get all unassigned lessons
   const allUnassignedLessons = allLessons.filter(l => !formData.lessonMappings[l.id]);
+
+  // Calculate total rows for border management
+  const totalRows = metaLessons.reduce((sum, ml) => sum + ml.periods.length, 0);
 
   return (
     <div className="space-y-4 max-w-162 overflow-x-scroll">
@@ -221,21 +232,15 @@ export function Step3BlockOrdering({
           <table className="w-full border-collapse">
             <thead className="sticky top-0 z-10">
               <tr>
-                <th className="bg-stone-50 border-b-2 border-r border-gray-300 p-2 min-w-24">
-                  <span className="text-xs font-semibold text-black">Meta Lesson</span>
+                <th className="bg-gray-50 border border-t-0 border-l-0 p-2 min-w-16">
+                  <span className="text-xs font-semibold text-black truncate block">Meta Lesson</span>
                 </th>
-                <th className="bg-stone-50 border-b-2 border-r-2 border-gray-400 p-2 min-w-24">
-                  <span className="text-xs font-semibold text-black">Meta Period</span>
+                <th className="bg-gray-50 border border-t-0 p-2 min-w-16">
+                  <span className="text-xs font-semibold text-black truncate block">Meta Period</span>
                 </th>
-                {formData.teachingGroups.map((tg, index) => (
-                  <th
-                    key={tg.id}
-                    className={cn(
-                      "bg-stone-50 border-b-2 border-gray-400 p-2 min-w-32",
-                      index < formData.teachingGroups.length - 1 && "border-r border-gray-300"
-                    )}
-                  >
-                    <span className="text-xs font-semibold text-black text-center leading-tight">
+                {formData.teachingGroups.map((tg) => (
+                  <th key={tg.id} className="bg-gray-50 border border-t-0 p-2 min-w-24">
+                    <span className="text-xs font-semibold text-black text-center leading-tight truncate block">
                       {tg.title}
                     </span>
                   </th>
@@ -246,14 +251,8 @@ export function Step3BlockOrdering({
               {metaLessons.flatMap((ml, mlIdx) =>
                 ml.periods.map((period, pIdx) => {
                   const isFirstPeriod = pIdx === 0;
-                  const isLastPeriod = pIdx === ml.periods.length - 1;
-                  const isLastMetaLesson = mlIdx === metaLessons.length - 1;
-                  
-                  const borderClasses = isLastMetaLesson && isLastPeriod 
-                    ? '' 
-                    : isLastPeriod 
-                    ? 'border-b-2 border-gray-400' 
-                    : 'border-b';
+                  const rowIndex = metaLessons.slice(0, mlIdx).reduce((sum, m) => sum + m.periods.length, 0) + pIdx;
+                  const isLastRow = rowIndex === totalRows - 1;
 
                   return (
                     <tr key={period.id}>
@@ -261,8 +260,8 @@ export function Step3BlockOrdering({
                         <td
                           rowSpan={ml.periods.length}
                           className={cn(
-                            "bg-stone-50 border-r border-gray-300 p-2 text-center",
-                            isLastMetaLesson ? '' : 'border-b-2 border-gray-400'
+                            "bg-gray-50 border border-l-0 p-2 text-center",
+                            isLastRow && "border-b-0"
                           )}
                         >
                           <span className="text-xs font-normal text-black whitespace-nowrap">
@@ -270,12 +269,15 @@ export function Step3BlockOrdering({
                           </span>
                         </td>
                       )}
-                      <td className={cn("bg-stone-50 border-r-2 border-gray-400 p-2 text-center", borderClasses)}>
+                      <td className={cn(
+                        "bg-gray-50 border p-2 text-center",
+                        isLastRow && "border-b-0"
+                      )}>
                         <span className="text-xs font-normal text-muted-foreground">
                           {period.number}
                         </span>
                       </td>
-                      {formData.teachingGroups.map((tg, tgIdx) => {
+                      {formData.teachingGroups.map((tg) => {
                         // Find lesson assigned to this period for this teaching group
                         const assignedLesson = allLessons.find(
                           l => l.tgNumber === tg.number && formData.lessonMappings[l.id] === period.id
@@ -314,71 +316,98 @@ export function Step3BlockOrdering({
                           }
                         }
 
+                        const popoverKey = `${period.id}-${tg.id}`;
+                        
+                        // Get current value for radio group
+                        const currentValue = assignedLesson?.id || NONE_VALUE;
+
                         return (
                           <td
                             key={tg.id}
                             rowSpan={shouldSpan ? 2 : 1}
                             className={cn(
-                              "p-1",
-                              tgIdx < formData.teachingGroups.length - 1 && "border-r border-gray-300",
-                              shouldSpan 
-                                ? isLastMetaLesson 
-                                  ? '' 
-                                  : 'border-b-2 border-gray-400'
-                                : borderClasses
+                              "border p-1",
+                              isLastRow && "border-b-0"
                             )}
                             style={assignedLesson ? { backgroundColor: bgColor } : undefined}
                           >
                             <div className={cn(
                               "flex items-center justify-center",
-                              shouldSpan ? "min-h-20" : "min-h-10"
+                              shouldSpan ? "min-h-20" : "min-h-8"
                             )}>
                               {ml.length === 2 && !isFirstPeriod ? (
                                 // Empty cell for second period of double meta lessons
                                 <span className="text-xs text-muted-foreground">-</span>
                               ) : (
-                                <Select
-                                  value={assignedLesson?.id || NONE_VALUE}
-                                  onValueChange={(value) => handleAssignLesson(value, period.id)}
+                                <Popover 
+                                  open={openPopovers[popoverKey] || false}
+                                  onOpenChange={(open) => setOpenPopovers(prev => ({ ...prev, [popoverKey]: open }))}
                                 >
-                                  <SelectTrigger 
-                                    className={cn(
-                                      "w-full h-full min-h-10 text-xs border-0 bg-transparent hover:bg-black/5",
-                                      assignedLesson && "font-medium"
-                                    )}
-                                  >
-                                    <SelectValue placeholder="Select lesson...">
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className={cn(
+                                        "w-full h-full min-h-8 text-xs hover:bg-black/5",
+                                        assignedLesson && "font-medium"
+                                      )}
+                                    >
                                       {assignedLesson ? (
-                                        <div className="text-center">
+                                        <div className="text-center truncate">
                                           {assignedLesson.className}-L{assignedLesson.lessonNumber} ({assignedLesson.length === 1 ? 'S' : 'D'})
                                         </div>
                                       ) : (
-                                        "Select..."
+                                        "-"
                                       )}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value={NONE_VALUE}>
-                                      <span className="text-muted-foreground">— None —</span>
-                                    </SelectItem>
-                                    {compatibleLessons.map(lesson => {
-                                      // Check if this lesson is already assigned to a different period
-                                      const isAssigned = !!formData.lessonMappings[lesson.id] && 
-                                                        formData.lessonMappings[lesson.id] !== period.id;
-                                      
-                                      return (
-                                        <SelectItem 
-                                          key={lesson.id} 
-                                          value={lesson.id}
-                                          disabled={isAssigned}
-                                        >
-                                          {lesson.className}-L{lesson.lessonNumber} ({lesson.length === 1 ? 'S' : 'D'})
-                                          {isAssigned && ' (assigned)'}
-                                        </SelectItem>
-                                      );
-                                    })}
-                                  </SelectContent>
-                                </Select>
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-64 p-4">
+                                    <div className="space-y-3">
+                                      <div className="space-y-1">
+                                        <h4 className="font-medium text-sm">Select lesson</h4>
+                                        <p className="text-xs text-muted-foreground">
+                                          Choose a lesson to assign to this slot
+                                        </p>
+                                      </div>
+                                      <RadioGroup 
+                                        value={currentValue} 
+                                        onValueChange={(value) => handleAssignLesson(value, period.id, popoverKey)}
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <RadioGroupItem value={NONE_VALUE} id={`${popoverKey}-none`} />
+                                          <Label htmlFor={`${popoverKey}-none`} className="text-xs">
+                                            — None —
+                                          </Label>
+                                        </div>
+                                        {compatibleLessons.map(lesson => {
+                                          // Check if this lesson is already assigned to a different period
+                                          const isAssigned = !!formData.lessonMappings[lesson.id] && 
+                                                            formData.lessonMappings[lesson.id] !== period.id;
+                                          
+                                          return (
+                                            <div key={lesson.id} className="flex items-center gap-3">
+                                              <RadioGroupItem 
+                                                value={lesson.id} 
+                                                id={`${popoverKey}-${lesson.id}`}
+                                                disabled={isAssigned}
+                                              />
+                                              <Label 
+                                                htmlFor={`${popoverKey}-${lesson.id}`}
+                                                className={cn(
+                                                  "text-xs",
+                                                  isAssigned && "text-muted-foreground"
+                                                )}
+                                              >
+                                                {lesson.className}-L{lesson.lessonNumber} ({lesson.length === 1 ? 'S' : 'D'})
+                                                {isAssigned && ' (assigned)'}
+                                              </Label>
+                                            </div>
+                                          );
+                                        })}
+                                      </RadioGroup>
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
                               )}
                             </div>
                           </td>
