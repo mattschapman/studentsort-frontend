@@ -42,7 +42,6 @@ export function ModelPageClient() {
   const selectedYearGroup = yearGroups.find(yg => yg.id === yearGroupParam);
 
   // Filter data for the selected year group
-  // Form groups need to be filtered by their band's year_group_id
   const filteredFormGroups = useMemo(() => {
     if (!yearGroupParam) return [];
     
@@ -88,34 +87,23 @@ export function ModelPageClient() {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="">
-        <div className="w-full max-w-6xl mx-auto flex flex-col gap-5 px-5">
-          <div className="flex items-center justify-between py-14">
-            <div className="flex items-center gap-4">
-              <h1 className="font-semibold text-2xl">
-                Curriculum Model - Year {selectedYearGroup.name}
-              </h1>
-            </div>
-            <Button onClick={() => setIsAddBlockDialogOpen(true)} size="sm">
-              <Plus className="w-4 h-4" />
-              Add Block
-            </Button>
-          </div>
-        </div>
+    <div className="w-full flex flex-col h-full">
+      {/* Fixed Toolbar */}
+      <div className="w-full bg-white border-b min-h-12 flex justify-start items-center px-4 shrink-0">
+        <Button onClick={() => setIsAddBlockDialogOpen(true)} variant="default" size="xs" className="text-xs">
+          <Plus className="size-3" />
+          Add Block
+        </Button>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto">
-        <div className="w-full max-w-6xl mx-auto px-5 py-6">
-          <CurriculumDiagram
-            blocks={filteredBlocks}
-            formGroups={filteredFormGroups}
-            bands={bands}
-            subjects={subjects}
-          />
-        </div>
+      {/* Scrollable Grid Container */}
+      <div className="w-full overflow-auto flex-1">
+        <CurriculumDiagram
+          blocks={filteredBlocks}
+          formGroups={filteredFormGroups}
+          bands={bands}
+          subjects={subjects}
+        />
       </div>
 
       {/* Add Block Dialog */}
