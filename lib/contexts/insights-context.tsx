@@ -3,29 +3,44 @@
 
 import { createContext, useContext, useState, type ReactNode } from "react";
 
+type PanelType = 'insights' | 'issues' | null;
+
 interface InsightsContextType {
+  activePanelType: PanelType;
   isInsightsOpen: boolean;
+  isIssuesOpen: boolean;
   toggleInsights: () => void;
-  openInsights: () => void;
-  closeInsights: () => void;
+  toggleIssues: () => void;
+  closePanel: () => void;
 }
 
 const InsightsContext = createContext<InsightsContextType | undefined>(undefined);
 
 export function InsightsProvider({ children }: { children: ReactNode }) {
-  const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+  const [activePanelType, setActivePanelType] = useState<PanelType>(null);
 
-  const toggleInsights = () => setIsInsightsOpen(prev => !prev);
-  const openInsights = () => setIsInsightsOpen(true);
-  const closeInsights = () => setIsInsightsOpen(false);
+  const isInsightsOpen = activePanelType === 'insights';
+  const isIssuesOpen = activePanelType === 'issues';
+
+  const toggleInsights = () => {
+    setActivePanelType(prev => prev === 'insights' ? null : 'insights');
+  };
+
+  const toggleIssues = () => {
+    setActivePanelType(prev => prev === 'issues' ? null : 'issues');
+  };
+
+  const closePanel = () => setActivePanelType(null);
 
   return (
     <InsightsContext.Provider 
       value={{ 
-        isInsightsOpen, 
-        toggleInsights, 
-        openInsights, 
-        closeInsights 
+        activePanelType,
+        isInsightsOpen,
+        isIssuesOpen,
+        toggleInsights,
+        toggleIssues,
+        closePanel,
       }}
     >
       {children}

@@ -6,17 +6,17 @@ import { Button } from "@/components/ui/button";
 import { useInsights } from "@/lib/contexts/insights-context";
 
 export default function InsightsPanel() {
-  const { closeInsights } = useInsights();
+  const { closePanel } = useInsights();
 
   return (
-    <div className="w-80 border-l bg-white flex flex-col h-full">
+    <div className="w-110 border-l bg-white flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b">
         <h2 className="font-semibold text-lg">Insights</h2>
         <Button
           variant="ghost"
           size="icon"
-          onClick={closeInsights}
+          onClick={closePanel}
           className="h-8 w-8"
         >
           <X className="h-4 w-4" />

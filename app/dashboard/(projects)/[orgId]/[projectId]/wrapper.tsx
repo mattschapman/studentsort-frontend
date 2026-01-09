@@ -3,6 +3,7 @@
 
 import { useInsights } from "@/lib/contexts/insights-context";
 import InsightsPanel from "./_components/insights-panel";
+import IssuesPanel from "./_components/issues-panel";
 
 interface ProjectContentWrapperProps {
   children: React.ReactNode;
@@ -11,17 +12,19 @@ interface ProjectContentWrapperProps {
 export default function ProjectContentWrapper({ 
   children
 }: ProjectContentWrapperProps) {
-  const { isInsightsOpen } = useInsights();
+  const { activePanelType } = useInsights();
+  const isPanelOpen = activePanelType !== null;
 
   return (
     <>
-      {/* Main content area - make it horizontally scrollable when insights panel is open */}
-      <main className={`flex-1 overflow-auto min-h-0 ${isInsightsOpen ? 'overflow-x-auto' : ''}`}>
+      {/* Main content area - make it horizontally scrollable when a panel is open */}
+      <main className={`flex-1 overflow-auto min-h-0 ${isPanelOpen ? 'overflow-x-auto' : ''}`}>
         {children}
       </main>
 
-      {/* Insights panel */}
-      {isInsightsOpen && <InsightsPanel />}
+      {/* Panels */}
+      {activePanelType === 'issues' && <IssuesPanel />}
+      {activePanelType === 'insights' && <InsightsPanel />}
     </>
   );
 }

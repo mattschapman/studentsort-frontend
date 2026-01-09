@@ -95,8 +95,23 @@ export function CurriculumDiagram({
 
   const totalRows = currentRow - 1;
   
-  // Create array of column numbers (1-23 for the 23 data columns)
-  const columns = Array.from({ length: 23 }, (_, i) => i + 1);
+  // Create array of column numbers (1-25 for the 25 data columns)
+  const columns = Array.from({ length: 25 }, (_, i) => i + 1);
+
+  // Create band rows info for rendering band cells with rowspan
+  const bandRows: Array<{ bandId: string; bandTitle: string; startRow: number; rowSpan: number }> = [];
+  let rowCounter = 1;
+  
+  bandEntries.forEach(([bandId, band]) => {
+    const rowSpan = band.formGroups.length;
+    bandRows.push({
+      bandId,
+      bandTitle: band.bandTitle,
+      startRow: rowCounter,
+      rowSpan
+    });
+    rowCounter += rowSpan;
+  });
 
   const handleDeleteConfirm = () => {
     if (blockToDelete) {
@@ -118,9 +133,12 @@ export function CurriculumDiagram({
         <div 
           className="grid bg-gray-50 border-b"
           style={{ 
-            gridTemplateColumns: 'repeat(24, 6.5rem)',
+            gridTemplateColumns: '6.5rem 6.5rem repeat(25, 6.5rem)',
           }}
         >
+          <div className="border-r px-4 py-2 text-left font-semibold text-xs">
+            Band
+          </div>
           <div className="border-r px-4 py-2 text-left font-semibold text-xs">
             Form Group
           </div>
@@ -135,30 +153,43 @@ export function CurriculumDiagram({
         <div 
           className="grid"
           style={{ 
-            gridTemplateColumns: 'repeat(24, 6.5rem)',
+            gridTemplateColumns: '6.5rem 6.5rem repeat(25, 6.5rem)',
             gridTemplateRows: `repeat(${totalRows}, 2.25rem)`
           }}
         >
+          {/* Band cells - each with rowspan for multiple form groups */}
+          {bandRows.map((bandRow, idx) => (
+            <div
+              key={`band-${idx}`}
+              className="col-start-1 border-r border-b px-4 py-2 flex items-center justify-start text-xs bg-gray-50 font-medium"
+              style={{ 
+                gridRow: `${bandRow.startRow} / span ${bandRow.rowSpan}`
+              }}
+            >
+              <span>{bandRow.bandTitle}</span>
+            </div>
+          ))}
+
           {/* Form groups - each as a direct grid child with borders */}
           {formGroupsWithRows.map((group, idx) => (
             <div
               key={`form-group-${idx}`}
-              className="col-start-1 border-r border-b px-4 py-2 flex items-center justify-start text-xs bg-gray-50 font-medium"
+              className="col-start-2 border-r border-b px-4 py-2 flex items-center justify-start text-xs bg-gray-50 font-medium"
               style={{ gridRow: group.row }}
             >
               <span>{group.name}</span>
             </div>
           ))}
 
-          {/* Background grid cells for columns 2-24 */}
+          {/* Background grid cells for columns 3-27 */}
           {Array.from({ length: totalRows }).map((_, rowIdx) => (
-            Array.from({ length: 23 }).map((_, colIdx) => (
+            Array.from({ length: 25 }).map((_, colIdx) => (
               <div
                 key={`cell-${rowIdx}-${colIdx}`}
                 className="border-r border-b bg-white"
                 style={{
                   gridRow: rowIdx + 1,
-                  gridColumn: colIdx + 2
+                  gridColumn: colIdx + 3
                 }}
               />
             ))
@@ -188,8 +219,8 @@ export function CurriculumDiagram({
             
             const colSpan = getColumnSpan(maxClasses);
             
-            // Add 1 to start_col to account for the "Form Group" column
-            const actualStartCol = block.start_col ? block.start_col + 1 : 2;
+            // Add 2 to start_col to account for the "Band" and "Form Group" columns
+            const actualStartCol = block.start_col ? block.start_col + 2 : 3;
             
             return (
               <Popover 
