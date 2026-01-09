@@ -2,9 +2,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { X, ChevronRight, ChevronLeft, AlertCircle, AlertTriangle, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useInsights } from "@/lib/contexts/insights-context";
+import { useValidation } from "@/lib/contexts/validation-context";
 import ClientSideHorizontalNavTabs from "@/components/horizontal-nav-tabs-client";
 import {
   Empty,
@@ -14,68 +16,37 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-
-// Type definition
-type IssueType = "error" | "warning" | "info";
-
-interface Issue {
-  id: string;
-  type: IssueType;
-  title: string;
-  description: string;
-  details: string;
-}
-
-// Dummy data
-const DUMMY_ISSUES: Issue[] = [
-  {
-    id: "1",
-    type: "error",
-    title: "Auth RLS Initialization Plan",
-    description: "public.orgs_memberships",
-    details: "The Row Level Security (RLS) policy for the orgs_memberships table has not been properly initialized. This could lead to unauthorized access to organization membership data.\n\nRecommended action: Review and apply the initialization plan in the security configuration panel.",
-  },
-  {
-    id: "2",
-    type: "error",
-    title: "Auth RLS Initialization Plan",
-    description: "public.orgs",
-    details: "Missing RLS policies on the organizations table. All rows are currently accessible without proper authorization checks.\n\nRecommended action: Enable RLS and create appropriate policies for organization access control.",
-  },
-];
+import type { Issue } from "@/lib/validation/types";
 
 type TabType = "errors" | "warnings" | "info";
 
 export default function IssuesPanel() {
+  const router = useRouter();
   const { closePanel } = useInsights();
+  const { getIssuesByType, errorCount, warningCount, infoCount } = useValidation();
   const [activeTab, setActiveTab] = useState<TabType>("errors");
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
 
   // Navigation items for tabs
   const navItems = [
     { 
-      name: `Errors${DUMMY_ISSUES.filter(i => i.type === "error").length > 0 ? ` (${DUMMY_ISSUES.filter(i => i.type === "error").length})` : ''}`, 
+      name: `Errors${errorCount > 0 ? ` (${errorCount})` : ''}`, 
       value: "errors" 
     },
     { 
-      name: `Warnings${DUMMY_ISSUES.filter(i => i.type === "warning").length > 0 ? ` (${DUMMY_ISSUES.filter(i => i.type === "warning").length})` : ''}`, 
+      name: `Warnings${warningCount > 0 ? ` (${warningCount})` : ''}`, 
       value: "warnings" 
     },
     { 
-      name: `Info${DUMMY_ISSUES.filter(i => i.type === "info").length > 0 ? ` (${DUMMY_ISSUES.filter(i => i.type === "info").length})` : ''}`, 
+      name: `Info${infoCount > 0 ? ` (${infoCount})` : ''}`, 
       value: "info" 
     },
   ];
 
-  // Filter issues by type
-  const filteredIssues = DUMMY_ISSUES.filter((issue) => {
-    if (activeTab === "errors") return issue.type === "error";
-    if (activeTab === "warnings") return issue.type === "warning";
-    if (activeTab === "info") return issue.type === "info";
-    return false;
-  });
+  // Get filtered issues based on active tab
+  const filteredIssues = getIssuesByType(activeTab === "errors" ? "error" : activeTab === "warnings" ? "warning" : "info");
 
-  const getIcon = (type: IssueType) => {
+  const getIcon = (type: Issue['type']) => {
     switch (type) {
       case "error":
         return <AlertCircle className="h-4 w-4 text-red-500" />;
@@ -89,6 +60,13 @@ export default function IssuesPanel() {
   const handleTabChange = (value: string) => {
     setActiveTab(value as TabType);
     setSelectedIssue(null); // Reset selection when switching tabs
+  };
+
+  const handleActionClick = (issue: Issue) => {
+    if (issue.action) {
+      router.push(issue.action.path);
+      closePanel(); // Close panel when navigating
+    }
   };
 
   if (selectedIssue) {
@@ -124,6 +102,18 @@ export default function IssuesPanel() {
             <div className="prose prose-xs max-w-none">
               <p className="text-xs whitespace-pre-line">{selectedIssue.details}</p>
             </div>
+            
+            {/* Action Button */}
+            {selectedIssue.action && (
+              <div className="pt-2">
+                <Button
+                  size="xs"
+                  onClick={() => handleActionClick(selectedIssue)}
+                >
+                  {selectedIssue.action.label}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -173,12 +163,12 @@ export default function IssuesPanel() {
             </Empty>
           </div>
         ) : (
-          <div className="divide-y">
+          <div>
             {filteredIssues.map((issue) => (
               <button
                 key={issue.id}
                 onClick={() => setSelectedIssue(issue)}
-                className="w-full flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors text-left"
+                className="w-full flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors text-left border-b"
               >
                 <div className="mt-0.5">
                   {getIcon(issue.type)}
@@ -195,17 +185,4 @@ export default function IssuesPanel() {
       </div>
     </div>
   );
-}
-
-// Export function to get issue counts for header indicator
-export function useIssueStatus() {
-  const errorCount = DUMMY_ISSUES.filter(i => i.type === "error").length;
-  const warningCount = DUMMY_ISSUES.filter(i => i.type === "warning").length;
-  
-  return {
-    hasErrors: errorCount > 0,
-    hasWarnings: warningCount > 0,
-    errorCount,
-    warningCount,
-  };
 }

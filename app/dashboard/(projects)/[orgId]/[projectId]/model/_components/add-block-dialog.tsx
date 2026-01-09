@@ -200,12 +200,13 @@ export function AddBlockDialog({
       const metaLessons: MetaLesson[] = [];
       formData.periodBreakdown.split('').forEach((char, idx) => {
         const length = char === 'D' ? 2 : 1;
-        const metaLessonId = `${blockId}-ml${idx + 1}`;
+        const metaLessonNum = idx + 1;
+        const metaLessonId = `${blockId}-ml${metaLessonNum}`;
         const metaPeriods: MetaPeriod[] = [];
 
         for (let i = 0; i < length; i++) {
           metaPeriods.push({
-            id: `${metaLessonId}-mp${i + 1}`,
+            id: `${blockId}-ml${metaLessonNum}-mp${i + 1}`,
             length: 1,
             start_period_id: '',
           });
@@ -229,12 +230,20 @@ export function AddBlockDialog({
 
           // Build lessons for this class
           cls.periodBreakdown.split('').forEach((char, idx) => {
+            const lessonNumber = idx + 1;
+            const lessonId = `${cls.id}-l${lessonNumber}`;
+            
+            // Get meta_period_id from lessonMappings
+            // The mapping uses stable IDs like "ml1-mp1", but we need to add blockId prefix
+            const mappedMetaPeriodId = formData.lessonMappings[lessonId] || '';
+            const metaPeriodId = mappedMetaPeriodId ? `${blockId}-${mappedMetaPeriodId}` : '';
+
             lessons.push({
-              number: idx + 1,
-              id: `${cls.id}-l${idx + 1}`,
+              number: lessonNumber,
+              id: lessonId,
               length: char === 'D' ? 2 : 1,
               teacher: [],
-              meta_period_id: '', // Will be assigned based on lesson mappings
+              meta_period_id: metaPeriodId, // Now properly assigned with blockId prefix!
             });
           });
 

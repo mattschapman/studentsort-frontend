@@ -32,7 +32,7 @@ interface MetaLessonData {
 }
 
 interface LessonData {
-  id: string;
+  id: string; // Format: ${classId}-l${lessonNumber} - stable ID used in final block
   classId: string;
   className: string;
   subjectId: string;
@@ -57,17 +57,19 @@ export function Step3BlockOrdering({
     return formData.periodBreakdown.split('').map((char, idx) => {
       const length = char === 'D' ? 2 : 1;
       const periods = [];
+      const metaLessonNum = idx + 1;
       
       for (let i = 0; i < length; i++) {
         periods.push({
-          id: generateId('mp'),
+          // Use stable, predictable IDs that will match final block structure
+          id: `ml${metaLessonNum}-mp${i + 1}`,
           number: i + 1
         });
       }
       
       return {
-        id: generateId('ml'),
-        number: idx + 1,
+        id: `ml${metaLessonNum}`,
+        number: metaLessonNum,
         length,
         periods
       };
@@ -75,6 +77,7 @@ export function Step3BlockOrdering({
   }, [formData.periodBreakdown]);
 
   // Build lessons from teaching groups
+  // IMPORTANT: Use stable IDs that match the final block structure
   const allLessons = useMemo<LessonData[]>(() => {
     const lessons: LessonData[] = [];
     
@@ -83,13 +86,14 @@ export function Step3BlockOrdering({
         if (!cls.periodBreakdown) return;
         
         cls.periodBreakdown.split('').forEach((char, idx) => {
+          const lessonNumber = idx + 1;
           lessons.push({
-            id: generateId('lesson'),
+            id: `${cls.id}-l${lessonNumber}`, // Stable ID matching final block structure
             classId: cls.id,
             className: cls.title,
             subjectId: cls.subjectId,
             tgNumber: tg.number,
-            lessonNumber: idx + 1,
+            lessonNumber: lessonNumber,
             length: char === 'D' ? 2 : 1
           });
         });

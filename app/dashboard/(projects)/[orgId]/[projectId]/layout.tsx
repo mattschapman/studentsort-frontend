@@ -2,6 +2,7 @@
 import ProjectOuterSidebar from "@/components/dashboard/sidebar/project-outer-sidebar"
 import ProjectInnerSidebar from "@/components/dashboard/sidebar/project-inner-sidebar"
 import ProjectContentWrapper from "./wrapper"
+// Remove this import: import { ValidationProvider } from "@/lib/contexts/validation-context"
 
 interface ProjectLayoutProps {
   children: React.ReactNode
@@ -19,6 +20,7 @@ export default async function ProjectLayout({
   const { orgId, projectId } = await params
 
   return (
+    // Remove ValidationProvider wrapper
     <div className="flex h-full min-h-0">
       <ProjectOuterSidebar orgId={orgId} projectId={projectId} />
       <ProjectInnerSidebar orgId={orgId} projectId={projectId} />

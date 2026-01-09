@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useInsights } from "@/lib/contexts/insights-context";
 import { EditProjectVersionDataDialog } from "@/app/dashboard/(projects)/[orgId]/[projectId]/_components/edit-project-version-data-dialog";
 import { SaveVersionButton } from "./save-version-button";
-import { useIssueStatus } from "@/app/dashboard/(projects)/[orgId]/[projectId]/_components/issues-panel";
+import { useIssueStatus } from "@/lib/contexts/validation-context"; // Changed import location
 
 interface DashboardHeaderProps {
   organizations: Organization[];
@@ -35,7 +35,12 @@ export default function DashboardHeader({
   const searchParams = useSearchParams();
   const { isInsightsOpen, isIssuesOpen, toggleInsights, toggleIssues } = useInsights();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const { hasErrors, hasWarnings } = useIssueStatus();
+  const { hasErrors, hasWarnings, errorCount, warningCount } = useIssueStatus();
+
+  // Debug logging
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Header render - Issues:', { hasErrors, hasWarnings, errorCount, warningCount });
+  }
 
   // Parse /dashboard/{orgId}/{projectId} with optional additional path segments
   const pathSegments = pathname.split('/').filter(Boolean);
