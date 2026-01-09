@@ -1,7 +1,7 @@
 // lib/validation/checks/teaching-hours-availability.ts
 
 import type { Issue, ValidationContext, CheckFunction } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import { generateShortId } from '../utils';
 
 /**
  * Check: Teaching Hours Availability
@@ -75,12 +75,13 @@ export const checkTeachingHoursAvailability: CheckFunction = (context: Validatio
       const shortfall = required - available;
       
       issues.push({
-        id: uuidv4(),
+        id: generateShortId(),
         type: 'error',
         severity: 'high',
         title: 'Insufficient Teaching Hours',
         description: `${subject.name}`,
-        details: `There are insufficient teaching hours available to deliver all ${subject.name} lessons.\n\nRequired: ${required} periods\nAvailable: ${available} periods\nShortfall: ${shortfall} periods\n\nRecommended action: Either increase teacher allocations for ${subject.name} in the Teachers section, or reduce the number of ${subject.name} lessons in your curriculum model.`,
+        details: `There are insufficient teaching hours available to deliver all ${subject.name} lessons.\n\nRequired: ${required} periods\nAvailable: ${available} periods\nShortfall: ${shortfall} periods`,
+        recommendation: `Either increase teacher allocations for ${subject.name} in the Teachers section, or reduce the number of ${subject.name} lessons in your curriculum model.`,
         action: {
           label: 'Go to Teachers',
           path: `/dashboard/${orgId}/${projectId}/teachers`,

@@ -1,7 +1,7 @@
 // lib/validation/checks/concurrent-teachers-capacity.ts
 
 import type { Issue, ValidationContext, CheckFunction } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import { generateShortId } from '../utils';
 
 /**
  * Check: Concurrent Teachers Capacity
@@ -152,12 +152,13 @@ export const checkConcurrentTeachersCapacity: CheckFunction = (context: Validati
         .join('\n');
 
       issues.push({
-        id: uuidv4(),
+        id: generateShortId(),
         type: 'error',
         severity: 'critical',
         title: 'Insufficient Teachers for Concurrent Classes',
         description: `${subjectName} in ${block.title || block.id}`,
-        details: `The block structure requires more ${subjectName} teachers than are available to teach concurrent classes.\n\nAvailable ${subjectName} teachers: ${teachersPerSubject[subjectId] || 0}\nMeta periods with violations: ${totalViolations}\n\nViolations:\n${violationDetails}\n\nRecommended action: Either add at least ${maxShortage} more ${subjectName} ${maxShortage === 1 ? 'teacher' : 'teachers'}, or restructure the block to reduce the number of concurrent ${subjectName} classes.`,
+        details: `The block structure requires more ${subjectName} teachers than are available to teach concurrent classes.\n\nAvailable ${subjectName} teachers: ${teachersPerSubject[subjectId] || 0}\nMeta periods with violations: ${totalViolations}\n\nViolations:\n${violationDetails}`,
+        recommendation: `Either add at least ${maxShortage} more ${subjectName} ${maxShortage === 1 ? 'teacher' : 'teachers'}, or restructure the block to reduce the number of concurrent ${subjectName} classes.`,
         action: {
           label: 'Go to Teachers',
           path: `/dashboard/${orgId}/${projectId}/teachers`,

@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useInsights } from "@/lib/contexts/insights-context";
 import { EditProjectVersionDataDialog } from "@/app/dashboard/(projects)/[orgId]/[projectId]/_components/edit-project-version-data-dialog";
 import { SaveVersionButton } from "./save-version-button";
-import { useIssueStatus } from "@/lib/contexts/validation-context"; // Changed import location
+import { useIssueStatus } from "@/lib/contexts/validation-context";
 
 interface DashboardHeaderProps {
   organizations: Organization[];
@@ -36,11 +36,6 @@ export default function DashboardHeader({
   const { isInsightsOpen, isIssuesOpen, toggleInsights, toggleIssues } = useInsights();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { hasErrors, hasWarnings, errorCount, warningCount } = useIssueStatus();
-
-  // Debug logging
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Header render - Issues:', { hasErrors, hasWarnings, errorCount, warningCount });
-  }
 
   // Parse /dashboard/{orgId}/{projectId} with optional additional path segments
   const pathSegments = pathname.split('/').filter(Boolean);
@@ -73,6 +68,14 @@ export default function DashboardHeader({
   const showPanelButtons = !!currentProjectId;
   const showEditButton = !!currentProjectId && !!currentVersionId;
   const showSaveButton = !!currentProjectId && !!currentVersionId;
+
+  const handleToggleIssues = () => {
+    // Clear hash if panel is currently open (about to close)
+    if (isIssuesOpen && window.location.hash.startsWith('#issue-')) {
+      history.pushState('', document.title, window.location.pathname + window.location.search);
+    }
+    toggleIssues();
+  };
 
   return (
     <>
@@ -149,8 +152,8 @@ export default function DashboardHeader({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={toggleIssues}
-                className={`rounded-full h-8 w-8 ${isIssuesOpen ? 'bg-muted' : ''}`}
+                onClick={handleToggleIssues}
+                className={`rounded-full h-8 w-8 ${isIssuesOpen ? 'bg-blue-500 hover:bg-blue-600 text-white hover:text-white' : 'hover:bg-blue-500 hover:text-white'}`}
                 title={isIssuesOpen ? "Close issues panel" : "Open issues panel"}
               >
                 <TriangleAlert className="h-4 w-4" />
@@ -172,7 +175,7 @@ export default function DashboardHeader({
               variant="outline"
               size="icon"
               onClick={toggleInsights}
-              className={`rounded-full h-8 w-8 ${isInsightsOpen ? 'bg-muted' : ''}`}
+              className={`rounded-full h-8 w-8 ${isInsightsOpen ? 'bg-blue-500 hover:bg-blue-600 text-white hover:text-white' : 'hover:bg-blue-500 hover:text-white'}`}
               title={isInsightsOpen ? "Close insights panel" : "Open insights panel"}
             >
               <Telescope className="h-4 w-4" />

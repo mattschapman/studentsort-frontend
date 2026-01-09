@@ -27,6 +27,7 @@ export interface Issue {
   title: string;
   description: string;
   details: string;
+  recommendation: string;
   action?: IssueAction;
   metadata?: IssueMetadata;
   checkId: string; // Which check generated this issue

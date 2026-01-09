@@ -54,7 +54,7 @@ export function ValidationProvider({ children }: ValidationProviderProps) {
 
     setIsValidating(true);
 
-    // Run validation synchronously (we can add debouncing here later if needed)
+    // Run validation synchronously
     const result = runValidationSync({
       versionData,
       orgId,
@@ -64,28 +64,6 @@ export function ValidationProvider({ children }: ValidationProviderProps) {
 
     setValidationResult(result);
     setIsValidating(false);
-
-    // Optional: Log validation results in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('=== Validation Context Debug ===');
-      console.log('Validation completed:', {
-        issuesFound: result.issues.length,
-        errorCount: result.issues.filter(i => i.type === 'error').length,
-        warningCount: result.issues.filter(i => i.type === 'warning').length,
-        checksRun: result.checksRun.length,
-        checksSkipped: result.checksSkipped.length,
-      });
-      console.log('Issues:', result.issues);
-      console.log('Blocks:', versionData?.model?.blocks?.length || 0);
-      if (versionData?.model?.blocks?.[0]) {
-        console.log('First block sample:', {
-          id: versionData.model.blocks[0].id,
-          title: versionData.model.blocks[0].title,
-          teachingGroupsCount: versionData.model.blocks[0].teaching_groups?.length,
-          firstLessonMetaPeriodId: versionData.model.blocks[0].teaching_groups?.[0]?.classes?.[0]?.lessons?.[0]?.meta_period_id,
-        });
-      }
-    }
   }, [versionData, orgId, projectId, versionId]);
 
   // Memoized derived values
