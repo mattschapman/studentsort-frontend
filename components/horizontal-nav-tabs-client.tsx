@@ -6,6 +6,8 @@ import { useState, useRef, useEffect } from 'react'
 interface NavigationItem {
   name: string
   value: string
+  count?: number
+  countColor?: 'red' | 'orange' | 'blue'
 }
 
 interface ClientSideHorizontalNavTabsProps {
@@ -78,6 +80,19 @@ export default function ClientSideHorizontalNavTabs({
   const handleTabClick = (item: NavigationItem, index: number) => {
     onTabChange(item.value, index)
   }
+
+  const getCountBadgeColor = (color?: 'red' | 'orange' | 'blue') => {
+    switch (color) {
+      case 'red':
+        return 'bg-red-500'
+      case 'orange':
+        return 'bg-orange-500'
+      case 'blue':
+        return 'bg-blue-500'
+      default:
+        return 'bg-gray-500'
+    }
+  }
   
   return (
     <nav className="mt-3 mb-0 pb-2.5">
@@ -90,9 +105,6 @@ export default function ClientSideHorizontalNavTabs({
             opacity: hoveredIndex !== null ? 1 : 0,
           }}
         />
-        
-        {/* Horizontal line underneath tabs only - static, no animation */}
-        {/* <div className="absolute -bottom-1.5 left-0 right-0 h-px bg-[#0e0f1120]" /> */}
         
         {/* Active Indicator */}
         <div
@@ -116,8 +128,13 @@ export default function ClientSideHorizontalNavTabs({
               onMouseLeave={() => setHoveredIndex(null)}
               onClick={() => handleTabClick(item, index)}
             >
-              <div className="text-xs font-medium leading-5 whitespace-nowrap flex items-center justify-center h-full">
+              <div className="text-xs font-medium leading-5 whitespace-nowrap flex items-center justify-center h-full gap-1.5">
                 {item.name}
+                {item.count !== undefined && item.count > 0 && (
+                  <span className={`${getCountBadgeColor(item.countColor)} text-white text-[10px] font-semibold px-1.5 py-0.5 rounded min-w-4.5 text-center leading-none`}>
+                    {item.count}
+                  </span>
+                )}
               </div>
             </div>
           ))}

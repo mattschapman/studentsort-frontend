@@ -125,8 +125,8 @@ export default function VersionSwitcher({
                       <GitBranch className="h-4 w-4 text-gray-500" />
                       <span className="flex-1 text-xs">v{version.version}</span>
                       {isLatest && (
-                        <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0 rounded-full">
-                          latest
+                        <span className="text-[8px] text-green-600 px-1.5 py-0.5 rounded-full bg-green-50 border border-green-100">
+                          Latest
                         </span>
                       )}
                       {currentVersionId === version.id && (

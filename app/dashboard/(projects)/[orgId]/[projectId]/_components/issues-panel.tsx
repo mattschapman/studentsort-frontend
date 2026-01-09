@@ -60,16 +60,22 @@ export default function IssuesPanel() {
   // Navigation items for tabs
   const navItems = [
     { 
-      name: `Errors${errorCount > 0 ? ` (${errorCount})` : ''}`, 
-      value: "errors" 
+      name: 'Errors',
+      value: "errors",
+      count: errorCount,
+      countColor: 'red' as const
     },
     { 
-      name: `Warnings${warningCount > 0 ? ` (${warningCount})` : ''}`, 
-      value: "warnings" 
+      name: 'Warnings',
+      value: "warnings",
+      count: warningCount,
+      countColor: 'orange' as const
     },
     { 
-      name: `Info${infoCount > 0 ? ` (${infoCount})` : ''}`, 
-      value: "info" 
+      name: 'Info',
+      value: "info",
+      count: infoCount,
+      countColor: 'blue' as const
     },
   ];
 
