@@ -4,14 +4,41 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { TeacherAvailability, Period } from "../_types/timetable.types";
+import type { Block } from "@/app/dashboard/(projects)/[orgId]/[projectId]/model/_components/types";
+import type { YearGroup, Subject } from "@/lib/contexts/version-data-context";
 import {
   getScheduledPeriodForLesson,
   getAssignedTeacher,
 } from "../_lib/compute-timetable-availability";
 import { getPeriodLabel } from "../_lib/period-label-utils";
 
+interface Teacher {
+  id: string;
+  name: string;
+  initials: string;
+  max_teaching_periods: number | null;
+  max_working_days: number | null;
+  unavailable_periods: string[];
+  subject_year_group_eligibility: Array<{
+    subject_id: string;
+    year_group_id: string;
+  }>;
+  subject_allocations?: Record<string, number>;
+}
+
+interface VersionData {
+  data: {
+    subjects: Subject[];
+    year_groups: YearGroup[];
+    teachers: Teacher[];
+  };
+  model: {
+    blocks: Block[];
+  };
+}
+
 interface TeachersGridProps {
-  versionData: any;
+  versionData: VersionData;
   periods: Period[];
   teachersAvailability: TeacherAvailability[];
   selectedMetaLessonId: string | null;
@@ -51,10 +78,63 @@ export function TeachersGrid({
   const renderTeacherRow = (teacher: TeacherAvailability) => {
     const isAssignedToSelectedLesson = assignedTeacherId === teacher.teacherId;
 
+    // Get full teacher data to access eligibility
+    const teacherData = versionData.data.teachers.find((t: Teacher) => t.id === teacher.teacherId);
+    
+    // Group eligibility by subject_id
+    const subjectMap = new Map<string, Set<string>>();
+    if (teacherData?.subject_year_group_eligibility) {
+      teacherData.subject_year_group_eligibility.forEach((e: { subject_id: string; year_group_id: string }) => {
+        if (!subjectMap.has(e.subject_id)) {
+          subjectMap.set(e.subject_id, new Set());
+        }
+        subjectMap.get(e.subject_id)!.add(e.year_group_id);
+      });
+    }
+    
+    // Get all year group IDs to check if teacher is eligible for all
+    const allYearGroupIds = new Set(versionData.data.year_groups.map((yg: YearGroup) => yg.id));
+
     return (
       <tr key={teacher.teacherId} className="bg-white">
         <td className="sticky left-0 z-10 bg-inherit border-b border-r px-4 py-2 text-xs font-medium">
-          {teacher.teacherName}
+          <div className="flex items-center gap-2">
+            <div>{teacher.teacherInitials}</div>
+            <div className="flex flex-wrap items-center gap-1">
+              {Array.from(subjectMap.entries()).map(([subjectId, yearGroupIds]) => {
+                const subject = versionData.data.subjects.find((s: Subject) => s.id === subjectId);
+                if (!subject) return null;
+                
+                // Check if eligible for all year groups
+                const isEligibleForAll = yearGroupIds.size === allYearGroupIds.size &&
+                  Array.from(allYearGroupIds).every((id: string) => yearGroupIds.has(id));
+                
+                // Sort year groups numerically
+                const sortedYearGroups = Array.from(yearGroupIds).sort((a, b) => {
+                  const numA = parseInt(a);
+                  const numB = parseInt(b);
+                  if (!isNaN(numA) && !isNaN(numB)) {
+                    return numA - numB;
+                  }
+                  return a.localeCompare(b);
+                });
+                
+                return (
+                  <div key={subjectId} className={cn(
+                    "w-fit px-1.5 py-0.5 rounded flex items-center justify-center text-[0.65rem]",
+                    subject.color_scheme
+                  )}>
+                    {subject.abbreviation}
+                    {!isEligibleForAll && (
+                      <span className="ml-1 text-[0.6rem] text-muted-foreground">
+                        {sortedYearGroups.join(', ')}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </td>
 
         {periods.map((period) => {

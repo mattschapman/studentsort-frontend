@@ -467,6 +467,7 @@ export function computeTeachersAvailability(
     teachersMap.set(teacherId, {
       teacherId,
       teacherName: teacher?.name || teacherId,
+      teacherInitials: teacher?.initials || teacherId,
       occupiedPeriods: {}
     });
   }

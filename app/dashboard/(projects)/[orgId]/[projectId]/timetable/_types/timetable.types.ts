@@ -25,6 +25,7 @@ export interface FormGroupAvailability {
 export interface TeacherAvailability {
   teacherId: string;
   teacherName: string;
+  teacherInitials: string;
   occupiedPeriods: Record<string, {
     lessonId: string;
     lessonTitle: string;
