@@ -68,6 +68,24 @@ export function TeachersGrid({
     return getAssignedTeacher(selectedLessonId, versionData.model.blocks);
   }, [selectedLessonId, versionData]);
 
+  // Get all lesson IDs in the same class as the selected lesson
+  const selectedClassLessonIds = useMemo(() => {
+    if (!selectedLessonId) return new Set<string>();
+    
+    for (const block of versionData.model.blocks) {
+      for (const tg of block.teaching_groups) {
+        for (const cls of tg.classes) {
+          const hasSelectedLesson = cls.lessons.some(l => l.id === selectedLessonId);
+          if (hasSelectedLesson) {
+            return new Set(cls.lessons.map(l => l.id));
+          }
+        }
+      }
+    }
+    
+    return new Set<string>();
+  }, [selectedLessonId, versionData]);
+
   const handleCellClick = (teacherId: string, periodId: string) => {
     if (!selectedLessonId || !selectedLessonPeriodId) return;
     if (periodId !== selectedLessonPeriodId) return;
@@ -146,12 +164,19 @@ export function TeachersGrid({
 
           const isAssignedHere = isSelectedLessonPeriod && isAssignedToSelectedLesson;
 
+          // Check if this occupied lesson is in the same class as the selected lesson
+          const isOtherLessonInSameClass = 
+            isOccupied && 
+            selectedClassLessonIds.has(occupiedInfo.lessonId) && 
+            occupiedInfo.lessonId !== selectedLessonId;
+
           const isClickable =
             isSelectedLessonPeriod && (isAssignedHere || !isOccupied);
 
           const shouldGreyOut =
             selectedLessonId &&
             selectedLessonPeriodId &&
+            !isOtherLessonInSameClass && // Don't grey out lessons in same class
             (period.id !== selectedLessonPeriodId ||
               (isOccupied && !isAssignedHere));
 
@@ -166,6 +191,8 @@ export function TeachersGrid({
             ? isAssignedHere
               ? "hover:opacity-80"
               : "hover:bg-blue-100"
+            : isOtherLessonInSameClass
+            ? "" // No hover effect for lessons in same class
             : showSubjectColors && isOccupied
             ? occupiedInfo.colorScheme
             : isOccupied
