@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Eye, Filter, Type, Palette, Users, SwatchBook } from "lucide-react";
+import { Eye, Filter, Type, Palette, Users, SwatchBook, EyeOff } from "lucide-react";
 
 export type TeacherFilterOption = "all" | "eligible" | "assigned";
 
@@ -77,7 +77,7 @@ export function TimetableViewOptionsPopover({
           Options
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
+      <PopoverContent className="w-82 p-0" align="end">
         <div className="grid">
           <div className="space-y-2 p-4 border-b">
             <h4 className="leading-none font-medium text-sm">Display Options</h4>
@@ -209,10 +209,10 @@ export function TimetableViewOptionsPopover({
               
               <div className="pt-2 grid grid-cols-2 items-start">
                 <div className="flex items-center gap-2 mb-2">
-                  <SwatchBook className="w-3 h-3" />
-                  <Label className="text-xs font-medium">Period Types</Label>
+                  <Eye className="w-3 h-3" />
+                  <Label className="text-xs font-medium">Visible period types</Label>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 pl-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="period-registration"

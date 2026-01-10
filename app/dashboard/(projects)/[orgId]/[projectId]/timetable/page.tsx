@@ -307,7 +307,7 @@ export default function TimetablePage() {
             <div className="h-full flex flex-col min-h-0 bg-stone-100">
               {/* Toolbar */}
               <div className="shrink-0 bg-white flex justify-between items-center px-4 py-3 border-b">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
                   <Button
                     size="xs"
                     className="text-xs"
@@ -316,9 +316,9 @@ export default function TimetablePage() {
                     <Play className="size-3 fill-white" />
                     Build
                   </Button>
-                  <TimetableProgressPopover blocks={versionData.model.blocks} />
                 </div>
                 <div className="flex items-center gap-2">
+                  <TimetableProgressPopover blocks={versionData.model.blocks} />
                   <TimetableViewOptionsPopover
                     options={gridViewOptions}
                     onOptionsChange={setGridViewOptions}

@@ -84,7 +84,7 @@ export function TimetableProgressPopover({ blocks }: TimetableProgressPopoverPro
           {Math.round(progress.combined)}% complete
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80" align="start">
+      <PopoverContent className="w-80" align="end">
         <div className="space-y-4">
           <div>
             <h4 className="font-medium text-sm mb-3">Progress</h4>
@@ -114,7 +114,7 @@ export function TimetableProgressPopover({ blocks }: TimetableProgressPopoverPro
 
           <div className="pb-2 space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-medium">Overall progress</span>
+              <span className="font-medium">Overall</span>
               <span className="font-semibold">
                 {Math.round(progress.combined)}%
               </span>
