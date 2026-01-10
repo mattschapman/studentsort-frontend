@@ -226,11 +226,11 @@ export function FilterSortGroupControls({
           <Button
             variant="outline"
             size="xs"
-            className={`rounded-full px-2 py-1 h-8 text-xs flex items-center gap-1 ${
+            className={`rounded-full text-xs ${
               isActive ? 'bg-green-100 text-green-500 hover:bg-green-200 hover:text-green-600 border-green-200 hover:border-green-300' : ''
             }`}
           >
-            <ListFilter className="h-3 w-3" />
+            <ListFilter className="size-3" />
             {getFieldDisplayName(filter.field)}
             <ChevronDown className="h-3 w-3" />
           </Button>
@@ -242,7 +242,7 @@ export function FilterSortGroupControls({
                 <span className="py-0.5">{getFieldDisplayName(filter.field)}</span>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" className="h-8 p-1 text-xs gap-[0.1rem] font-bold">
+                    <Button variant="ghost" size="xs" className="h-8 p-1 text-xs gap-[0.1rem] font-bold">
                       {filter.operator === 'is' ? 'is' : 'is not'}
                       <ChevronDown className="h-3 w-3" />
                     </Button>
@@ -250,6 +250,7 @@ export function FilterSortGroupControls({
                   <PopoverContent className="w-24 p-1" align="start">
                     <Button
                       variant="ghost"
+                      size="xs"
                       className="w-full justify-start text-xs px-2 py-1.5"
                       onClick={() => actions.updateFilter(filter.id, { operator: 'is' })}
                     >
@@ -257,6 +258,7 @@ export function FilterSortGroupControls({
                     </Button>
                     <Button
                       variant="ghost"
+                      size="xs" 
                       className="w-full justify-start text-xs p-2 py-1.5"
                       onClick={() => actions.updateFilter(filter.id, { operator: 'is-not' })}
                     >
@@ -341,7 +343,7 @@ export function FilterSortGroupControls({
           <Button
             variant="outline"
             size="xs"
-            className="rounded-full text-xs flex items-center gap-1"
+            className="rounded-full text-xs"
           >
             <Plus className="h-3 w-3" size={8} />
             Add filter
@@ -366,7 +368,7 @@ export function FilterSortGroupControls({
       </div>
 
       <div className="flex gap-2 flex-wrap items-center">
-        {renderSortButton()}
+        {/* {renderSortButton()} */}
 
         {!isSortingByRigidity && renderGroupByButton()}
         

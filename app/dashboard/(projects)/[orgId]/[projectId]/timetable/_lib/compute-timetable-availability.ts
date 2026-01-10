@@ -475,46 +475,46 @@ export function computeTeachersAvailability(
   const allPeriodIds = versionData.cycle.periods.map(p => p.id);
   
   // Process all lessons to mark occupied periods
-  for (const block of versionData.model.blocks) {
-    for (const tg of block.teaching_groups) {
-      for (const cls of tg.classes) {
-        const subject = versionData.data.subjects.find(s => s.id === cls.subject);
-        const subjectColor = subject?.color_scheme || 'bg-gray-200';
+for (const block of versionData.model.blocks) {
+  for (const tg of block.teaching_groups) {
+    for (const cls of tg.classes) {
+      const subject = versionData.data.subjects.find(s => s.id === cls.subject);
+      const subjectColor = subject?.color_scheme || 'bg-gray-200';
+      
+      for (const lesson of cls.lessons) {
+        if (!lesson.teacher_id) continue;
         
-        for (const lesson of cls.lessons) {
-          if (!lesson.teacher_id) continue;
-          
-          const teacherId = lesson.teacher_id;
-          const teacher = teachersMap.get(teacherId);
-          if (!teacher) continue;
-          
-          // Find the meta period this lesson belongs to
-          for (const metaLesson of block.meta_lessons) {
-            const metaPeriod = metaLesson.meta_periods.find(
-              mp => mp.id === lesson.meta_period_id
+        const teacherId = lesson.teacher_id;
+        const teacher = teachersMap.get(teacherId);
+        if (!teacher) continue;
+        
+        // Find the meta period this lesson belongs to
+        for (const metaLesson of block.meta_lessons) {
+          const metaPeriod = metaLesson.meta_periods.find(
+            mp => mp.id === lesson.meta_period_id
+          );
+          if (metaPeriod && metaPeriod.start_period_id) {
+            // Get all consecutive periods this lesson occupies
+            const occupiedPeriodIds = getConsecutivePeriods(
+              metaPeriod.start_period_id,
+              metaPeriod.length,
+              allPeriodIds
             );
-            if (metaPeriod && metaPeriod.start_period_id) {
-              // Get all consecutive periods this lesson occupies
-              const occupiedPeriodIds = getConsecutivePeriods(
-                metaPeriod.start_period_id,
-                metaPeriod.length,
-                allPeriodIds
-              );
-              
-              for (const periodId of occupiedPeriodIds) {
-                teacher.occupiedPeriods[periodId] = {
-                  lessonId: lesson.id,
-                  lessonTitle: lesson.id,
-                  subject: cls.subject,
-                  colorScheme: subjectColor
-                };
-              }
+            
+            for (const periodId of occupiedPeriodIds) {
+              teacher.occupiedPeriods[periodId] = {
+                lessonId: lesson.id,
+                lessonTitle: block.title,  // CHANGED: Use block.title instead of lesson.id
+                subject: cls.subject,
+                colorScheme: subjectColor
+              };
             }
           }
         }
       }
     }
   }
+}
   
   return Array.from(teachersMap.values());
 }
