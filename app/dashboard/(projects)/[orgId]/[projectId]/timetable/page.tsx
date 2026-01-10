@@ -18,7 +18,9 @@ import {
   computeFormGroupsAvailability,
   computeTeachersAvailability,
   getScheduledPeriod,
+  parsePeriods,
 } from "./_lib/compute-timetable-availability";
+import { filterPeriodsByType } from "./_lib/period-label-utils";
 
 export default function TimetablePage() {
   const {
@@ -41,9 +43,27 @@ export default function TimetablePage() {
     showTeachersGrid: true,
     teacherFilter: "eligible",
     showRoomsGrid: false,
+    showPeriodTypes: {
+      Registration: false,
+      Lesson: true,
+      Break: false,
+      Lunch: false,
+      Twilight: false,
+    },
     showBlockTitles: true,
     useBlockColors: true,
   });
+
+  // Parse all periods
+  const allPeriods = useMemo(() => {
+    if (!versionData) return [];
+    return parsePeriods(versionData);
+  }, [versionData]);
+
+  // Filter periods based on selected types
+  const filteredPeriods = useMemo(() => {
+    return filterPeriodsByType(allPeriods, gridViewOptions.showPeriodTypes);
+  }, [allPeriods, gridViewOptions.showPeriodTypes]);
 
   // Compute form groups availability
   const formGroupsAvailability = useMemo(() => {
@@ -64,12 +84,10 @@ export default function TimetablePage() {
   // Filter teachers based on teacher filter option
   const filteredTeachersAvailability = useMemo(() => {
     if (gridViewOptions.teacherFilter === "all") {
-      // Show all teachers (this would require computing all teachers, not just eligible ones)
       return teachersAvailability;
     }
 
     if (gridViewOptions.teacherFilter === "assigned") {
-      // Show only teachers who are assigned to any lesson
       if (!versionData) return [];
 
       const assignedTeacherIds = new Set<string>();
@@ -90,7 +108,6 @@ export default function TimetablePage() {
       );
     }
 
-    // "eligible" - this is already the default from computeTeachersAvailability
     return teachersAvailability;
   }, [teachersAvailability, gridViewOptions.teacherFilter, versionData]);
 
@@ -106,7 +123,7 @@ export default function TimetablePage() {
     if (gridViewOptions.showSelectedLessonFormGroupsOnly && selectedBlockId) {
       return feederFormGroupIds;
     }
-    return []; // Empty array means show all
+    return [];
   }, [
     gridViewOptions.showSelectedLessonFormGroupsOnly,
     selectedBlockId,
@@ -115,7 +132,6 @@ export default function TimetablePage() {
 
   // Handle meta lesson selection
   const handleMetaLessonSelect = (blockId: string, metaLessonId: string) => {
-    // Handle deselection (empty strings)
     if (!blockId || !metaLessonId) {
       setSelectedBlockId(null);
       setSelectedMetaLessonId(null);
@@ -123,7 +139,7 @@ export default function TimetablePage() {
     } else {
       setSelectedBlockId(blockId);
       setSelectedMetaLessonId(metaLessonId);
-      setSelectedLessonId(null); // Clear lesson selection when meta lesson is selected
+      setSelectedLessonId(null);
     }
   };
 
@@ -132,7 +148,6 @@ export default function TimetablePage() {
     metaLessonId: string,
     lessonId: string
   ) => {
-    // Handle deselection (empty strings)
     if (!blockId || !metaLessonId || !lessonId) {
       setSelectedBlockId(null);
       setSelectedMetaLessonId(null);
@@ -161,12 +176,10 @@ export default function TimetablePage() {
       versionData.model.blocks
     );
 
-    // Get the first meta period (for now, we assume one meta period per meta lesson)
     const metaPeriod = metaLesson.meta_periods[0];
     if (!metaPeriod) return;
 
     if (currentlyScheduledPeriod === periodId) {
-      // Unschedule if clicking the same period
       updateMetaPeriodSchedule(
         selectedBlockId,
         selectedMetaLessonId,
@@ -174,7 +187,6 @@ export default function TimetablePage() {
         null
       );
     } else {
-      // Schedule to the clicked period
       updateMetaPeriodSchedule(
         selectedBlockId,
         selectedMetaLessonId,
@@ -188,7 +200,6 @@ export default function TimetablePage() {
   const handleTeacherClick = (teacherId: string, lessonId: string) => {
     if (!selectedLessonId || !versionData || !selectedBlockId) return;
 
-    // Find the lesson to get its details
     let lessonDetails: {
       teachingGroupNumber: number;
       classId: string;
@@ -220,7 +231,6 @@ export default function TimetablePage() {
     const isCurrentlyAssigned = lessonDetails.currentTeacherId === teacherId;
 
     if (isCurrentlyAssigned) {
-      // Unassign if clicking the same teacher
       updateLessonTeacher(
         selectedBlockId,
         lessonDetails.teachingGroupNumber,
@@ -229,7 +239,6 @@ export default function TimetablePage() {
         null
       );
     } else {
-      // Assign to the clicked teacher
       updateLessonTeacher(
         selectedBlockId,
         lessonDetails.teachingGroupNumber,
@@ -272,8 +281,8 @@ export default function TimetablePage() {
           {/* Left Column: Meta Lessons */}
           <ResizablePanel defaultSize={300} minSize={200} maxSize={300}>
             <div className="h-full flex flex-col min-h-0">
-              <div className="px-5 h-12 border-b flex justify-between items-center shrink-0">
-                <h2 className="font-semibold">Lessons</h2>
+              <div className="py-2 px-4.5 border-b flex justify-between items-center shrink-0">
+                <h2 className="font-semibold">Timetable</h2>
               </div>
 
               <div className="flex-1 min-h-0 overflow-y-auto">
@@ -296,9 +305,6 @@ export default function TimetablePage() {
               {/* Toolbar */}
               <div className="shrink-0 bg-white flex justify-end items-center px-4 py-3 border-b">
                 <div className="flex items-center gap-2">
-                  {/* {hasUnsavedChanges && (
-                    <span className="text-xs text-muted-foreground">Unsaved changes</span>
-                  )} */}
                   <TimetableViewOptionsPopover
                     options={gridViewOptions}
                     onOptionsChange={setGridViewOptions}
@@ -310,6 +316,7 @@ export default function TimetablePage() {
               <div className="shrink-0 min-h-24 border-b">
                 <SummaryAvailabilityGrid
                   versionData={versionData}
+                  periods={filteredPeriods}
                   selectedBlockId={selectedBlockId}
                   selectedMetaLessonId={selectedMetaLessonId}
                   formGroupsAvailability={formGroupsAvailability}
@@ -328,6 +335,7 @@ export default function TimetablePage() {
                       >
                         <FormGroupsGrid
                           versionData={versionData}
+                          periods={filteredPeriods}
                           formGroupsAvailability={formGroupsAvailability}
                           selectedBlockId={selectedBlockId}
                           feederFormGroupIds={effectiveFeederFormGroupIds}
@@ -351,6 +359,7 @@ export default function TimetablePage() {
                       >
                         <TeachersGrid
                           versionData={versionData}
+                          periods={filteredPeriods}
                           teachersAvailability={filteredTeachersAvailability}
                           selectedMetaLessonId={selectedMetaLessonId}
                           selectedLessonId={selectedLessonId}

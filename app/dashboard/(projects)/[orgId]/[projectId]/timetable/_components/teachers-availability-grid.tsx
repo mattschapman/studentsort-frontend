@@ -3,15 +3,16 @@
 
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
-import type { TeacherAvailability } from "../_types/timetable.types";
+import type { TeacherAvailability, Period } from "../_types/timetable.types";
 import {
-  parsePeriods,
   getScheduledPeriodForLesson,
   getAssignedTeacher,
 } from "../_lib/compute-timetable-availability";
+import { getPeriodLabel } from "../_lib/period-label-utils";
 
 interface TeachersGridProps {
   versionData: any;
+  periods: Period[];
   teachersAvailability: TeacherAvailability[];
   selectedMetaLessonId: string | null;
   selectedLessonId: string | null;
@@ -21,14 +22,13 @@ interface TeachersGridProps {
 
 export function TeachersGrid({
   versionData,
+  periods,
   teachersAvailability,
   selectedMetaLessonId,
   selectedLessonId,
   showSubjectColors = true,
   onTeacherClick,
 }: TeachersGridProps) {
-  const periods = useMemo(() => parsePeriods(versionData), [versionData]);
-
   // Get the period where the selected lesson is scheduled
   const selectedLessonPeriodId = useMemo(() => {
     if (!selectedLessonId) return null;
@@ -41,23 +41,7 @@ export function TeachersGrid({
     return getAssignedTeacher(selectedLessonId, versionData.model.blocks);
   }, [selectedLessonId, versionData]);
 
-  const getDayAbbreviation = (dayTitle: string): string => {
-    const lower = dayTitle.toLowerCase();
-    if (lower.includes("monday") || lower === "mon") return "M";
-    if (lower.includes("tuesday") || lower === "tue") return "Tu";
-    if (lower.includes("wednesday") || lower === "wed") return "W";
-    if (lower.includes("thursday") || lower === "thu") return "Th";
-    if (lower.includes("friday") || lower === "fri") return "F";
-    if (lower.includes("saturday") || lower === "sat") return "Sa";
-    if (lower.includes("sunday") || lower === "sun") return "Su";
-    return "?";
-  };
-
   const handleCellClick = (teacherId: string, periodId: string) => {
-    // Only allow clicking if:
-    // 1. A specific lesson is selected (not just meta lesson)
-    // 2. The lesson is scheduled to a period
-    // 3. The clicked cell is in that period's column
     if (!selectedLessonId || !selectedLessonPeriodId) return;
     if (periodId !== selectedLessonPeriodId) return;
 
@@ -77,28 +61,19 @@ export function TeachersGrid({
           const occupiedInfo = teacher.occupiedPeriods[period.id];
           const isOccupied = !!occupiedInfo;
 
-          // Check if this cell is for the selected lesson's scheduled period
           const isSelectedLessonPeriod =
             selectedLessonId && selectedLessonPeriodId === period.id;
 
-          // Check if this teacher is assigned to the selected lesson in this period
           const isAssignedHere = isSelectedLessonPeriod && isAssignedToSelectedLesson;
 
-          // Cell is clickable if:
-          // - A lesson is selected
-          // - This is the period where the lesson is scheduled
-          // - Teacher is either assigned here or available here
           const isClickable =
             isSelectedLessonPeriod && (isAssignedHere || !isOccupied);
 
-          // Grey out cells when a lesson is selected and scheduled:
-          // - All cells in other columns (different period)
-          // - Cells in the scheduled column where teacher is busy with another lesson
           const shouldGreyOut =
             selectedLessonId &&
             selectedLessonPeriodId &&
-            (period.id !== selectedLessonPeriodId || // Different column
-              (isOccupied && !isAssignedHere)); // Same column but teacher busy with another lesson
+            (period.id !== selectedLessonPeriodId ||
+              (isOccupied && !isAssignedHere));
 
           const bgColor =
             showSubjectColors && isOccupied
@@ -117,12 +92,10 @@ export function TeachersGrid({
             ? "hover:bg-stone-300"
             : "hover:bg-stone-50";
 
-          // Add grey overlay styling for non-selectable cells
           const greyOutStyle = shouldGreyOut
             ? "bg-stone-200 opacity-30 pointer-events-none"
             : "";
 
-          // Build tooltip text
           let tooltipText = "";
           if (isAssignedHere) {
             tooltipText = `Assigned to ${selectedLessonId} - Click to unassign`;
@@ -134,7 +107,6 @@ export function TeachersGrid({
             tooltipText = "Available";
           }
 
-          // Add border to highlight assigned teacher for selected lesson
           const borderClass = isAssignedHere
             ? "border-2 border-blue-500"
             : "border-b border-r";
@@ -212,18 +184,18 @@ export function TeachersGrid({
                 Teacher
               </th>
               {periods.map((period, index) => {
-                const prevPeriod = index > 0 ? periods[index - 1] : null;
-                const isFirstInDay = !prevPeriod || prevPeriod.dayId !== period.dayId;
-                const dayAbbr = getDayAbbreviation(period.dayTitle);
-                const lessonNumber = period.lessonNumberWithinDay;
-                const label = isFirstInDay ? dayAbbr : lessonNumber.toString();
+                const label = getPeriodLabel(period, periods, index);
+                const isLesson = period.type === 'Lesson';
 
                 return (
                   <th
                     key={period.id}
-                    className="border-b border-r px-1 py-2 text-center text-xs font-medium min-w-8 max-w-8 bg-stone-50"
+                    className={cn(
+                      "border-b border-r px-1 py-2 text-center text-xs min-w-8 max-w-8 bg-stone-50",
+                      isLesson ? "font-medium" : "font-light text-muted-foreground"
+                    )}
                   >
-                    <span className="font-semibold">{label}</span>
+                    <span className={isLesson ? "font-semibold" : ""}>{label}</span>
                   </th>
                 );
               })}

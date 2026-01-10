@@ -4,11 +4,12 @@
 import { useState, Fragment, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronRight, ChevronDown } from "lucide-react";
-import type { FormGroupAvailability } from "../_types/timetable.types";
-import { parsePeriods } from "../_lib/compute-timetable-availability";
+import type { FormGroupAvailability, Period } from "../_types/timetable.types";
+import { getPeriodLabel } from "../_lib/period-label-utils";
 
 interface FormGroupsGridProps {
   versionData: any;
+  periods: Period[];
   formGroupsAvailability: FormGroupAvailability[];
   selectedBlockId: string | null;
   feederFormGroupIds: string[];
@@ -26,6 +27,7 @@ interface BandGroup {
 
 export function FormGroupsGrid({
   versionData,
+  periods,
   formGroupsAvailability,
   selectedBlockId,
   feederFormGroupIds,
@@ -34,8 +36,6 @@ export function FormGroupsGrid({
   groupByBand = true,
 }: FormGroupsGridProps) {
   const [expandedBands, setExpandedBands] = useState<Set<string>>(new Set());
-
-  const periods = useMemo(() => parsePeriods(versionData), [versionData]);
 
   const filteredFormGroups = useMemo(() => {
     if (!selectedBlockId || feederFormGroupIds.length === 0) {
@@ -67,18 +67,6 @@ export function FormGroupsGrid({
 
     return groups;
   }, [filteredFormGroups, groupByBand]);
-
-  const getDayAbbreviation = (dayTitle: string): string => {
-    const lower = dayTitle.toLowerCase();
-    if (lower.includes("monday") || lower === "mon") return "M";
-    if (lower.includes("tuesday") || lower === "tue") return "Tu";
-    if (lower.includes("wednesday") || lower === "wed") return "W";
-    if (lower.includes("thursday") || lower === "thu") return "Th";
-    if (lower.includes("friday") || lower === "fri") return "F";
-    if (lower.includes("saturday") || lower === "sat") return "Sa";
-    if (lower.includes("sunday") || lower === "sun") return "Su";
-    return "?";
-  };
 
   const toggleBand = (bandId: string) => {
     setExpandedBands((prev) => {
@@ -343,18 +331,18 @@ export function FormGroupsGrid({
                 {groupByBand ? "Band" : "Form Group"}
               </th>
               {periods.map((period, index) => {
-                const prevPeriod = index > 0 ? periods[index - 1] : null;
-                const isFirstInDay = !prevPeriod || prevPeriod.dayId !== period.dayId;
-                const dayAbbr = getDayAbbreviation(period.dayTitle);
-                const lessonNumber = period.lessonNumberWithinDay;
-                const label = isFirstInDay ? dayAbbr : lessonNumber.toString();
+                const label = getPeriodLabel(period, periods, index);
+                const isLesson = period.type === 'Lesson';
 
                 return (
                   <th
                     key={period.id}
-                    className="border-b border-r px-1 py-2 text-center text-xs font-medium min-w-8 max-w-8 bg-stone-50"
+                    className={cn(
+                      "border-b border-r px-1 py-2 text-center text-xs min-w-8 max-w-8 bg-stone-50",
+                      isLesson ? "font-medium" : "font-light text-muted-foreground"
+                    )}
                   >
-                    <span className="font-semibold">{label}</span>
+                    <span className={isLesson ? "font-semibold" : ""}>{label}</span>
                   </th>
                 );
               })}

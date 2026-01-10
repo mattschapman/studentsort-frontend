@@ -2,6 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
   Popover,
@@ -16,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Eye, Filter, Type, Palette, Users } from "lucide-react";
+import { Eye, Filter, Type, Palette, Users, SwatchBook } from "lucide-react";
 
 export type TeacherFilterOption = "all" | "eligible" | "assigned";
 
@@ -31,6 +32,15 @@ export interface TimetableViewOptions {
 
   // Rooms Grid
   showRoomsGrid: boolean;
+
+  // Period Filters
+  showPeriodTypes: {
+    Registration: boolean;
+    Lesson: boolean;
+    Break: boolean;
+    Lunch: boolean;
+    Twilight: boolean;
+  };
 
   // Display Options
   showBlockTitles: boolean;
@@ -48,6 +58,16 @@ export function TimetableViewOptionsPopover({
 }: TimetableViewOptionsPopoverProps) {
   const handleChange = (key: keyof TimetableViewOptions, value: any) => {
     onOptionsChange({ ...options, [key]: value });
+  };
+
+  const handlePeriodTypeChange = (periodType: string, checked: boolean) => {
+    onOptionsChange({
+      ...options,
+      showPeriodTypes: {
+        ...options.showPeriodTypes,
+        [periodType]: checked,
+      },
+    });
   };
 
   return (
@@ -154,29 +174,8 @@ export function TimetableViewOptionsPopover({
               </div>
             </div>
 
-            {/* Rooms Options */}
-            {/* <div className="space-y-2 border-t p-4">
-              <h5 className="text-xs font-semibold text-stone-700">Rooms</h5>
-              <div className="grid grid-cols-2 items-center gap-4 h-7">
-                <Label
-                  htmlFor="show-rooms-grid"
-                  className="col-span-1 text-xs flex items-center gap-2"
-                >
-                  <Eye className="w-3 h-3" />
-                  Visible
-                </Label>
-                <Switch
-                  id="show-rooms-grid"
-                  checked={options.showRoomsGrid}
-                  onCheckedChange={(checked) =>
-                    handleChange("showRoomsGrid", checked)
-                  }
-                />
-              </div>
-            </div> */}
-
             {/* Display Options */}
-            <div className="space-y-2 p-4 border-t">
+            <div className="space-y-3 p-4 border-t">
               <h5 className="text-xs font-semibold text-stone-700">Display</h5>
               <div className="grid grid-cols-2 items-center gap-4 h-7">
                 <Label
@@ -209,6 +208,90 @@ export function TimetableViewOptionsPopover({
                     handleChange("useBlockColors", checked)
                   }
                 />
+              </div>
+              
+              <div className="pt-2 grid grid-cols-2 items-start">
+                <div className="flex items-center gap-2 mb-2">
+                  <SwatchBook className="w-3 h-3" />
+                  <Label className="text-xs font-medium">Period Types</Label>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="period-registration"
+                      checked={options.showPeriodTypes.Registration}
+                      onCheckedChange={(checked) =>
+                        handlePeriodTypeChange("Registration", checked as boolean)
+                      }
+                    />
+                    <Label
+                      htmlFor="period-registration"
+                      className="text-xs font-normal cursor-pointer"
+                    >
+                      Registration
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="period-lesson"
+                      checked={options.showPeriodTypes.Lesson}
+                      onCheckedChange={(checked) =>
+                        handlePeriodTypeChange("Lesson", checked as boolean)
+                      }
+                    />
+                    <Label
+                      htmlFor="period-lesson"
+                      className="text-xs font-normal cursor-pointer"
+                    >
+                      Lessons
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="period-break"
+                      checked={options.showPeriodTypes.Break}
+                      onCheckedChange={(checked) =>
+                        handlePeriodTypeChange("Break", checked as boolean)
+                      }
+                    />
+                    <Label
+                      htmlFor="period-break"
+                      className="text-xs font-normal cursor-pointer"
+                    >
+                      Break
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="period-lunch"
+                      checked={options.showPeriodTypes.Lunch}
+                      onCheckedChange={(checked) =>
+                        handlePeriodTypeChange("Lunch", checked as boolean)
+                      }
+                    />
+                    <Label
+                      htmlFor="period-lunch"
+                      className="text-xs font-normal cursor-pointer"
+                    >
+                      Lunch
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="period-twilight"
+                      checked={options.showPeriodTypes.Twilight}
+                      onCheckedChange={(checked) =>
+                        handlePeriodTypeChange("Twilight", checked as boolean)
+                      }
+                    />
+                    <Label
+                      htmlFor="period-twilight"
+                      className="text-xs font-normal cursor-pointer"
+                    >
+                      Twilight
+                    </Label>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
