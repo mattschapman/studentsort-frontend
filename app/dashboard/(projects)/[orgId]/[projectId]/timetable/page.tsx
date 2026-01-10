@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Play, Wand2 } from "lucide-react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -21,6 +21,9 @@ import {
   parsePeriods,
 } from "./_lib/compute-timetable-availability";
 import { filterPeriodsByType } from "./_lib/period-label-utils";
+import { Button } from "@/components/ui/button";
+import { TimetableProgressPopover } from "./_components/progress-popover";
+
 
 export default function TimetablePage() {
   const {
@@ -303,7 +306,18 @@ export default function TimetablePage() {
           <ResizablePanel defaultSize={80}>
             <div className="h-full flex flex-col min-h-0 bg-stone-100">
               {/* Toolbar */}
-              <div className="shrink-0 bg-white flex justify-end items-center px-4 py-3 border-b">
+              <div className="shrink-0 bg-white flex justify-between items-center px-4 py-3 border-b">
+                <div className="flex items-center gap-3">
+                  <Button
+                    size="xs"
+                    className="text-xs"
+                  >
+                    {/* <Wand2 className="size-3" /> */}
+                    <Play className="size-3 fill-white" />
+                    Build
+                  </Button>
+                  <TimetableProgressPopover blocks={versionData.model.blocks} />
+                </div>
                 <div className="flex items-center gap-2">
                   <TimetableViewOptionsPopover
                     options={gridViewOptions}
