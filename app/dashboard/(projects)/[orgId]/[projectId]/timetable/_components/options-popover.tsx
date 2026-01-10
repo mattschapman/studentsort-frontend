@@ -81,9 +81,6 @@ export function TimetableViewOptionsPopover({
         <div className="grid">
           <div className="space-y-2 p-4 border-b">
             <h4 className="leading-none font-medium text-sm">Display Options</h4>
-            <p className="text-muted-foreground text-xs">
-              Customize the look and feel of the grids.
-            </p>
           </div>
           <div className="grid">
             {/* Form Groups Options */}
