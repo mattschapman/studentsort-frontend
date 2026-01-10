@@ -249,7 +249,7 @@ export function CurriculumDiagram({
                       >
                         {tg.classes.map((cls, cidx) => (
                           <div key={cidx} className="flex gap-1 items-baseline">
-                            <span className="text-[11px] font-medium">{cls.id}</span>
+                            <span className="text-[11px] font-medium">{cls.title}</span>
                             <span className="text-[6px] align-sub">{cls.total_periods}</span>
                           </div>
                         ))}

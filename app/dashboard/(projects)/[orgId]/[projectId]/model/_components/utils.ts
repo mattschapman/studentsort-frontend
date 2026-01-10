@@ -1,7 +1,7 @@
-// app/dashboard/(projects)/[orgId]/[projectId]/model/utils.ts
+// app/dashboard/(projects)/[orgId]/[projectId]/model/_components/utils.ts
 
 export function generateId(prefix: string): string {
-  return `${prefix}-${Math.random().toString(36).substr(2, 9)}`;
+  return `${prefix}-${Math.random().toString(36).substr(2, 8)}`;
 }
 
 export function generatePeriodBreakdowns(numPeriods: number): string[] {

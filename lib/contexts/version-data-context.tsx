@@ -153,6 +153,8 @@ interface VersionDataContextValue {
   updateHardConstraints: (constraints: Partial<HardConstraints>) => void;
   updateSoftConstraints: (constraints: Partial<SoftConstraints>) => void;
   updateClassSplitPriorities: (priorities: Record<string, number>) => void;
+  updateMetaPeriodSchedule: (blockId: string, metaLessonId: string, metaPeriodId: string, periodId: string | null) => void;
+  updateLessonTeacher: (blockId: string, teachingGroupNumber: number, classId: string, lessonId: string, teacherId: string | null) => void;
   getVersionJsonString: () => string;
 }
 
@@ -487,6 +489,103 @@ export function VersionDataProvider({ children }: VersionDataProviderProps) {
     });
   }, []);
 
+  // Timetabling methods
+  const updateMetaPeriodSchedule = useCallback((
+    blockId: string,
+    metaLessonId: string,
+    metaPeriodId: string,
+    periodId: string | null
+  ) => {
+    setVersionData(prev => {
+      if (!prev) return null;
+      
+      return {
+        ...prev,
+        model: {
+          ...prev.model,
+          blocks: prev.model.blocks.map(block => {
+            if (block.id !== blockId) return block;
+            
+            return {
+              ...block,
+              meta_lessons: block.meta_lessons.map(metaLesson => {
+                if (metaLesson.id !== metaLessonId) return metaLesson;
+                
+                return {
+                  ...metaLesson,
+                  meta_periods: metaLesson.meta_periods.map(metaPeriod => {
+                    if (metaPeriod.id !== metaPeriodId) return metaPeriod;
+                    
+                    return {
+                      ...metaPeriod,
+                      start_period_id: periodId || ''
+                    };
+                  })
+                };
+              })
+            };
+          })
+        }
+      };
+    });
+  }, []);
+
+  const updateLessonTeacher = useCallback((
+    blockId: string,
+    teachingGroupNumber: number,
+    classId: string,
+    lessonId: string,
+    teacherId: string | null
+  ) => {
+    setVersionData(prev => {
+      if (!prev) return null;
+      
+      const updatedBlocks = prev.model.blocks.map(block => {
+        if (block.id !== blockId) return block;
+        
+        const updatedTeachingGroups = block.teaching_groups.map(tg => {
+          if (tg.number !== teachingGroupNumber) return tg;
+          
+          const updatedClasses = tg.classes.map(cls => {
+            if (cls.id !== classId) return cls;
+            
+            const updatedLessons = cls.lessons.map(lesson => {
+              if (lesson.id !== lessonId) return lesson;
+              
+              return {
+                ...lesson,
+                teacher_id: teacherId || ''
+              };
+            });
+            
+            return {
+              ...cls,
+              lessons: updatedLessons
+            };
+          });
+          
+          return {
+            ...tg,
+            classes: updatedClasses
+          };
+        });
+        
+        return {
+          ...block,
+          teaching_groups: updatedTeachingGroups
+        };
+      });
+      
+      return {
+        ...prev,
+        model: {
+          ...prev.model,
+          blocks: updatedBlocks
+        }
+      };
+    });
+  }, []);
+
   const getVersionJsonString = useCallback(() => {
     if (!versionData) return '';
     return JSON.stringify(versionData, null, 2);
@@ -511,6 +610,8 @@ export function VersionDataProvider({ children }: VersionDataProviderProps) {
         updateHardConstraints,
         updateSoftConstraints,
         updateClassSplitPriorities,
+        updateMetaPeriodSchedule,
+        updateLessonTeacher,
         getVersionJsonString
       }}
     >
@@ -526,6 +627,9 @@ export function useVersionData() {
   }
   return context;
 }
+
+
+
 
 
 
@@ -621,6 +725,32 @@ export function useVersionData() {
 //   teachers: Teacher[];
 // };
 
+// export type HardConstraints = {
+//   studentConflictPrevention: boolean;
+//   teacherConflictPrevention: boolean;
+//   requireSpecialists: boolean;
+//   classSpacing: boolean;
+//   maxCapacity: boolean;
+//   targetCapacity: boolean;
+//   maximiseCoverFlexibility: boolean;
+//   doubleLessonRestrictedPeriods: string[];
+//   min_slt_available: number;
+//   max_periods_per_day_per_teacher: number;
+//   max_teachers_per_class: number;
+// };
+
+// export type SoftConstraints = {
+//   classSplitting: number;
+//   balanceWorkload: number;
+//   dailyOverloadPenalty: number;
+// };
+
+// export type Settings = {
+//   hardConstraints: HardConstraints;
+//   softConstraints: SoftConstraints;
+//   classSplitPriorities: Record<string, number>;
+// };
+
 // type VersionJsonData = {
 //   metadata: {
 //     org_id: string;
@@ -639,26 +769,7 @@ export function useVersionData() {
 //   };
 //   staffing: Record<string, any>;
 //   timetable: Record<string, any>;
-//   settings: {
-//     hardConstraints: {
-//       studentConflictPrevention: boolean;
-//       teacherConflictPrevention: boolean;
-//       requireSpecialists: boolean;
-//       classSpacing: boolean;
-//       maxCapacity: boolean;
-//       targetCapacity: boolean;
-//       maximiseCoverFlexibility: boolean;
-//       doubleLessonRestrictedPeriods: any[];
-//       min_slt_available: number;
-//       max_periods_per_day_per_teacher: number;
-//       max_teachers_per_class: number;
-//     };
-//     softConstraints: {
-//       classSplitting: number;
-//       balanceWorkload: number;
-//     };
-//     classSplitPriorities: Record<string, any>;
-//   };
+//   settings: Settings;
 // };
 
 // interface VersionDataContextValue {
@@ -675,6 +786,9 @@ export function useVersionData() {
 //   addBlock: (block: Block) => void;
 //   updateBlock: (blockId: string, updates: Partial<Block>) => void;
 //   deleteBlock: (blockId: string) => void;
+//   updateHardConstraints: (constraints: Partial<HardConstraints>) => void;
+//   updateSoftConstraints: (constraints: Partial<SoftConstraints>) => void;
+//   updateClassSplitPriorities: (priorities: Record<string, number>) => void;
 //   getVersionJsonString: () => string;
 // }
 
@@ -750,6 +864,36 @@ export function useVersionData() {
 //         }
 //         if (!parsedData.model.blocks) {
 //           parsedData.model.blocks = [];
+//         }
+
+//         // Ensure settings exist with defaults
+//         if (!parsedData.settings) {
+//           parsedData.settings = {
+//             hardConstraints: {
+//               studentConflictPrevention: true,
+//               teacherConflictPrevention: true,
+//               requireSpecialists: true,
+//               classSpacing: true,
+//               maxCapacity: true,
+//               targetCapacity: true,
+//               maximiseCoverFlexibility: true,
+//               doubleLessonRestrictedPeriods: [],
+//               min_slt_available: 2,
+//               max_periods_per_day_per_teacher: 4,
+//               max_teachers_per_class: 2
+//             },
+//             softConstraints: {
+//               classSplitting: 50,
+//               balanceWorkload: 50,
+//               dailyOverloadPenalty: 50
+//             },
+//             classSplitPriorities: {}
+//           };
+//         }
+
+//         // Ensure dailyOverloadPenalty exists (for backwards compatibility)
+//         if (!parsedData.settings.softConstraints.dailyOverloadPenalty) {
+//           parsedData.settings.softConstraints.dailyOverloadPenalty = 50;
 //         }
         
 //         setVersionData(parsedData);
@@ -930,6 +1074,55 @@ export function useVersionData() {
 //     });
 //   }, []);
 
+//   // Settings management methods
+//   const updateHardConstraints = useCallback((constraints: Partial<HardConstraints>) => {
+//     setVersionData(prev => {
+//       if (!prev) return null;
+      
+//       return {
+//         ...prev,
+//         settings: {
+//           ...prev.settings,
+//           hardConstraints: {
+//             ...prev.settings.hardConstraints,
+//             ...constraints
+//           }
+//         }
+//       };
+//     });
+//   }, []);
+
+//   const updateSoftConstraints = useCallback((constraints: Partial<SoftConstraints>) => {
+//     setVersionData(prev => {
+//       if (!prev) return null;
+      
+//       return {
+//         ...prev,
+//         settings: {
+//           ...prev.settings,
+//           softConstraints: {
+//             ...prev.settings.softConstraints,
+//             ...constraints
+//           }
+//         }
+//       };
+//     });
+//   }, []);
+
+//   const updateClassSplitPriorities = useCallback((priorities: Record<string, number>) => {
+//     setVersionData(prev => {
+//       if (!prev) return null;
+      
+//       return {
+//         ...prev,
+//         settings: {
+//           ...prev.settings,
+//           classSplitPriorities: priorities
+//         }
+//       };
+//     });
+//   }, []);
+
 //   const getVersionJsonString = useCallback(() => {
 //     if (!versionData) return '';
 //     return JSON.stringify(versionData, null, 2);
@@ -951,6 +1144,9 @@ export function useVersionData() {
 //         addBlock,
 //         updateBlock,
 //         deleteBlock,
+//         updateHardConstraints,
+//         updateSoftConstraints,
+//         updateClassSplitPriorities,
 //         getVersionJsonString
 //       }}
 //     >

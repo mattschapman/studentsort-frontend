@@ -232,6 +232,7 @@ export function AddBlockDialog({
           cls.periodBreakdown.split('').forEach((char, idx) => {
             const lessonNumber = idx + 1;
             const lessonId = `${cls.id}-l${lessonNumber}`;
+            const lessonTitle = `${cls.title}-L${lessonNumber}`;
             
             // Get meta_period_id from lessonMappings
             // The mapping uses stable IDs like "ml1-mp1", but we need to add blockId prefix
@@ -241,15 +242,17 @@ export function AddBlockDialog({
             lessons.push({
               number: lessonNumber,
               id: lessonId,
+              title: lessonTitle,
               length: char === 'D' ? 2 : 1,
-              teacher: [],
-              meta_period_id: metaPeriodId, // Now properly assigned with blockId prefix!
+              teacher_id: "",
+              meta_period_id: metaPeriodId,
             });
           });
 
           classes.push({
             subject: cls.subjectId,
-            id: cls.title,
+            id: cls.id,
+            title: cls.title,
             total_periods: cls.numPeriods,
             period_breakdown: cls.periodBreakdown,
             lessons,
@@ -257,7 +260,9 @@ export function AddBlockDialog({
         });
 
         teachingGroups.push({
+          id: tg.id,
           number: tg.number,
+          title: tg.title,
           classes,
         });
       });

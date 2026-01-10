@@ -340,42 +340,42 @@
                     "number": 1,
                     "id": "cls-yu6tzntaf-l1",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml1-mp1"
                   },
                   {
                     "number": 2,
                     "id": "cls-yu6tzntaf-l2",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml2-mp1"
                   },
                   {
                     "number": 3,
                     "id": "cls-yu6tzntaf-l3",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml3-mp1"
                   },
                   {
                     "number": 4,
                     "id": "cls-yu6tzntaf-l4",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml4-mp1"
                   },
                   {
                     "number": 5,
                     "id": "cls-yu6tzntaf-l5",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml5-mp1"
                   },
                   {
                     "number": 6,
                     "id": "cls-yu6tzntaf-l6",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml6-mp1"
                   }
                 ]
@@ -395,42 +395,42 @@
                     "number": 1,
                     "id": "b793dc5f-3da9-4d7b-8f62-fc3cafbf74d3-l1",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml1-mp1"
                   },
                   {
                     "number": 2,
                     "id": "b793dc5f-3da9-4d7b-8f62-fc3cafbf74d3-l2",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml2-mp1"
                   },
                   {
                     "number": 3,
                     "id": "b793dc5f-3da9-4d7b-8f62-fc3cafbf74d3-l3",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml3-mp1"
                   },
                   {
                     "number": 4,
                     "id": "b793dc5f-3da9-4d7b-8f62-fc3cafbf74d3-l4",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml4-mp1"
                   },
                   {
                     "number": 5,
                     "id": "b793dc5f-3da9-4d7b-8f62-fc3cafbf74d3-l5",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml5-mp1"
                   },
                   {
                     "number": 6,
                     "id": "b793dc5f-3da9-4d7b-8f62-fc3cafbf74d3-l6",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml6-mp1"
                   }
                 ]
@@ -450,42 +450,42 @@
                     "number": 1,
                     "id": "f43542ed-f803-49fe-a934-86b4c27e35b8-l1",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml1-mp1"
                   },
                   {
                     "number": 2,
                     "id": "f43542ed-f803-49fe-a934-86b4c27e35b8-l2",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml2-mp1"
                   },
                   {
                     "number": 3,
                     "id": "f43542ed-f803-49fe-a934-86b4c27e35b8-l3",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml3-mp1"
                   },
                   {
                     "number": 4,
                     "id": "f43542ed-f803-49fe-a934-86b4c27e35b8-l4",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml4-mp1"
                   },
                   {
                     "number": 5,
                     "id": "f43542ed-f803-49fe-a934-86b4c27e35b8-l5",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml5-mp1"
                   },
                   {
                     "number": 6,
                     "id": "f43542ed-f803-49fe-a934-86b4c27e35b8-l6",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml6-mp1"
                   }
                 ]
@@ -505,42 +505,42 @@
                     "number": 1,
                     "id": "3248b255-56b4-4b55-8686-25d75ee3ac3c-l1",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml1-mp1"
                   },
                   {
                     "number": 2,
                     "id": "3248b255-56b4-4b55-8686-25d75ee3ac3c-l2",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml2-mp1"
                   },
                   {
                     "number": 3,
                     "id": "3248b255-56b4-4b55-8686-25d75ee3ac3c-l3",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml3-mp1"
                   },
                   {
                     "number": 4,
                     "id": "3248b255-56b4-4b55-8686-25d75ee3ac3c-l4",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml4-mp1"
                   },
                   {
                     "number": 5,
                     "id": "3248b255-56b4-4b55-8686-25d75ee3ac3c-l5",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml5-mp1"
                   },
                   {
                     "number": 6,
                     "id": "3248b255-56b4-4b55-8686-25d75ee3ac3c-l6",
                     "length": 1,
-                    "teacher": [],
+                    "teacher_id": "",
                     "meta_period_id": "block-kd7lwesd3-ml6-mp1"
                   }
                 ]

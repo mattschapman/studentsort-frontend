@@ -1,4 +1,4 @@
-// app/dashboard/(projects)/[orgId]/[projectId]/model/types.ts
+// app/dashboard/(projects)/[orgId]/[projectId]/model/_components/types.ts
 
 export interface Block {
   id: string;
@@ -28,13 +28,16 @@ export interface MetaPeriod {
 }
 
 export interface TeachingGroup {
+  id: string;
   number: number;
+  title: string;
   classes: Class[];
 }
 
 export interface Class {
   subject: string;
   id: string;
+  title: string;
   total_periods: number;
   period_breakdown: string;
   lessons: Lesson[];
@@ -43,14 +46,15 @@ export interface Class {
 export interface Lesson {
   number: number;
   id: string;
+  title: string;
   length: number;
-  teacher: Teacher[];
+  teacher_id: string;
   meta_period_id: string;
 }
 
 export interface Teacher {
   id: string;
-  constraint_type: string;
+  // constraint_type: string;
 }
 
 // Form data types for the dialog

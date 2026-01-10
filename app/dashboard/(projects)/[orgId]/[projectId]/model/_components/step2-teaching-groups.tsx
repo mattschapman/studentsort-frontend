@@ -18,7 +18,7 @@ import { Plus, X, Copy, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import type { BlockFormData, TeachingGroupFormData, ClassFormData } from "./types";
 import type { Subject } from "@/lib/contexts/version-data-context";
-import { generatePeriodBreakdowns, getTailwindColorValue, createDefaultClass, createDefaultTeachingGroup } from "./utils";
+import { generatePeriodBreakdowns, getTailwindColorValue, createDefaultClass, createDefaultTeachingGroup, generateId } from "./utils";
 
 interface Step2TeachingGroupsProps {
   formData: BlockFormData;
@@ -107,12 +107,12 @@ export function Step2TeachingGroups({
 
     const clonedTitle = generateTeachingGroupTitle(newIndex);
     const clonedGroup: TeachingGroupFormData = {
-      id: crypto.randomUUID(),
+      id: generateId('tg'),
       number: newIndex,
       title: clonedTitle,
       classes: teachingGroup.classes.map(cls => ({
         ...cls,
-        id: crypto.randomUUID(),
+        id: generateId('cls'),
         title: generateClassTitle(clonedTitle, cls.subjectId, teachingGroup.classes.length)
       })),
       isExpanded: false
@@ -217,7 +217,7 @@ export function Step2TeachingGroups({
           const originalClass = tg.classes[classIndex];
           const clonedClass: ClassFormData = {
             ...originalClass,
-            id: crypto.randomUUID()
+            id: generateId('cls')
           };
 
           const newClasses = [...tg.classes];
