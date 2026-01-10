@@ -97,6 +97,33 @@ const innerNavigationItems: Record<string, SectionData> = {
       }
     ]
   },
+  settings: {
+    title: "Settings",
+    sections: [
+      {
+        label: "PROJECT SETTINGS",
+        items: [
+          {
+            label: "General",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/settings`
+          }
+        ]
+      },
+      {
+        label: "TIMETABLE",
+        items: [
+          {
+            label: "Auto-scheduling",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/settings/auto-scheduling`
+          },
+          {
+            label: "Constraints",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/settings/constraints`
+          }
+        ]
+      }
+    ]
+  },
 }
 
 export default function ProjectInnerSidebar({ orgId, projectId }: ProjectInnerSidebarProps) {
@@ -111,6 +138,7 @@ export default function ProjectInnerSidebar({ orgId, projectId }: ProjectInnerSi
     if (pathname.includes('/cycle')) return 'cycle'
     if (pathname.includes('/data')) return 'data'
     if (pathname.includes('/model')) return 'model'
+    if (pathname.includes('/settings')) return 'settings'
     return null
   }
 

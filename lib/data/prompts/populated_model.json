@@ -1,0 +1,577 @@
+# NEW example json data for project version
+{
+  "metadata": {
+    "org_id": "zGJyTdK8",
+    "org_title": "Greenwood School",
+    "project_id": "Fmk2AQVQ",
+    "project_title": "2026-27",
+    "version_id": "YpmNzKRP",
+    "version_number": 1,
+    "created_at": "2026-01-07T14:20:13.275Z",
+    "created_by": "9440774a-93d3-423e-a9bc-c6368965aa4e"
+  },
+  "cycle": {
+    "weeks": [
+      {
+        "id": "A",
+        "name": "A",
+        "order": 1
+      },
+      {
+        "id": "B",
+        "name": "B",
+        "order": 2
+      }
+    ],
+    "days": [
+      {
+        "id": "A-Mon",
+        "name": "A-Mon",
+        "week_id": "A",
+        "order": 1
+      },
+      {
+        "id": "A-Tue",
+        "name": "A-Tue",
+        "week_id": "A",
+        "order": 2
+      },
+      ...
+      {
+        "id": "B-Fri",
+        "name": "B-Fri",
+        "week_id": "B",
+        "order": 5
+      }
+    ],
+    "periods": [
+      {
+        "id": "A-Mon-1",
+        "day_id": "A-Mon",
+        "type": "Registration",
+        "column": 1
+      },
+      {
+        "id": "A-Mon-2",
+        "day_id": "A-Mon",
+        "type": "Lesson",
+        "column": 2
+      },
+      {
+        "id": "A-Mon-3",
+        "day_id": "A-Mon",
+        "type": "Break",
+        "column": 3
+      },
+      {
+        "id": "A-Mon-4",
+        "day_id": "A-Mon",
+        "type": "Lesson",
+        "column": 4
+      },
+      ...
+      {
+        "id": "B-Fri-8",
+        "day_id": "B-Fri",
+        "type": "Lesson",
+        "column": 8
+      },
+      {
+        "id": "A-Fri-9",
+        "day_id": "A-Fri",
+        "type": "Twilight",
+        "column": 9
+      },
+      {
+        "id": "B-Fri-9",
+        "day_id": "B-Fri",
+        "type": "Twilight",
+        "column": 9
+      }
+    ]
+  },
+  "data": {
+    "departments": [
+      {
+        "id": "8YHYM9S7",
+        "name": "Maths"
+      },
+      ...
+    ],
+    "subjects": [
+      {
+        "id": "1Ak5krGg",
+        "name": "Geography",
+        "abbreviation": "Gg",
+        "color_scheme": "bg-lime-200",
+        "department_id": "TRoDyPab"
+      },
+      {
+        "id": "q6AVG8Bd",
+        "name": "Maths",
+        "abbreviation": "Ma",
+        "color_scheme": "bg-red-200",
+        "department_id": "8YHYM9S7"
+      },
+      ...
+    ],
+    "year_groups": [
+      {
+        "id": "7",
+        "name": "7",
+        "order": 1
+      },
+      {
+        "id": "8",
+        "name": "8",
+        "order": 2
+      },
+      {
+        "id": "9",
+        "name": "9",
+        "order": 3
+      },
+      {
+        "id": "10",
+        "name": "10",
+        "order": 4
+      },
+      {
+        "id": "11",
+        "name": "11",
+        "order": 5
+      }
+    ],
+    "bands": [
+      {
+        "id": "7X",
+        "name": "7X",
+        "year_group_id": "7",
+        "order": 1
+      },
+      {
+        "id": "7Y",
+        "name": "7Y",
+        "year_group_id": "7",
+        "order": 2
+      },
+      {
+        "id": "8X",
+        "name": "8X",
+        "year_group_id": "8",
+        "order": 1
+      },
+      {
+        "id": "8Y",
+        "name": "8Y",
+        "year_group_id": "8",
+        "order": 2
+      },
+      ...,
+      {
+        "id": "11Y",
+        "name": "11Y",
+        "year_group_id": "11",
+        "order": 2
+      }
+    ],
+    "form_groups": [
+      {
+        "id": "7X1",
+        "name": "7X1",
+        "band_id": "7X",
+        "column": 1
+      },
+      {
+        "id": "7X2",
+        "name": "7X2",
+        "band_id": "7X",
+        "column": 2
+      },
+      ...,
+      {
+        "id": "7Y1",
+        "name": "7Y1",
+        "band_id": "7Y",
+        "column": 1
+      },
+      ...,
+      {
+        "id": "11Y4",
+        "name": "11Y4",
+        "band_id": "11Y",
+        "column": 4
+      }
+    ],
+    "teachers": [
+      {
+        "id": "HoFnZbDm",
+        "name": "John Smith",
+        "initials": "JSm",
+        "max_teaching_periods": 40,
+        "max_working_days": 5,
+        "unavailable_periods": [],
+        "subject_year_group_eligibility": [
+          {
+            "subject_id": "1Ak5krGg",
+            "year_group_id": "7"
+          },
+          {
+            "subject_id": "1Ak5krGg",
+            "year_group_id": "8"
+          },
+          {
+            "subject_id": "1Ak5krGg",
+            "year_group_id": "9"
+          },
+          {
+            "subject_id": "1Ak5krGg",
+            "year_group_id": "10"
+          },
+          {
+            "subject_id": "1Ak5krGg",
+            "year_group_id": "11"
+          }
+        ],
+        "subject_allocations": {
+          "1Ak5krGg": 40
+        }
+      },
+      ...
+    ]
+  },
+  "model": {
+    "blocks": [
+      {
+        "id": "block-kd7lwesd3",
+        "title": "7X-En",
+        "total_periods": 6,
+        "period_breakdown": "SSSSSS",
+        "feeder_form_groups": [
+          "7X1",
+          "7X2",
+          "7X3",
+          "7X4"
+        ],
+        "year_group": 7,
+        "start_col": 2,
+        "start_row": 1,
+        "end_row": 4,
+        "color_scheme": "bg-green-200",
+        "meta_lessons": [
+          {
+            "id": "block-kd7lwesd3-ml1",
+            "length": 1,
+            "meta_periods": [
+              {
+                "id": "block-kd7lwesd3-ml1-mp1",
+                "length": 1,
+                "start_period_id": ""
+              }
+            ]
+          },
+          {
+            "id": "block-kd7lwesd3-ml2",
+            "length": 1,
+            "meta_periods": [
+              {
+                "id": "block-kd7lwesd3-ml2-mp1",
+                "length": 1,
+                "start_period_id": ""
+              }
+            ]
+          },
+          {
+            "id": "block-kd7lwesd3-ml3",
+            "length": 1,
+            "meta_periods": [
+              {
+                "id": "block-kd7lwesd3-ml3-mp1",
+                "length": 1,
+                "start_period_id": ""
+              }
+            ]
+          },
+          {
+            "id": "block-kd7lwesd3-ml4",
+            "length": 1,
+            "meta_periods": [
+              {
+                "id": "block-kd7lwesd3-ml4-mp1",
+                "length": 1,
+                "start_period_id": ""
+              }
+            ]
+          },
+          {
+            "id": "block-kd7lwesd3-ml5",
+            "length": 1,
+            "meta_periods": [
+              {
+                "id": "block-kd7lwesd3-ml5-mp1",
+                "length": 1,
+                "start_period_id": ""
+              }
+            ]
+          },
+          {
+            "id": "block-kd7lwesd3-ml6",
+            "length": 1,
+            "meta_periods": [
+              {
+                "id": "block-kd7lwesd3-ml6-mp1",
+                "length": 1,
+                "start_period_id": ""
+              }
+            ]
+          }
+        ],
+        "teaching_groups": [
+          {
+            "number": 1,
+            "classes": [
+              {
+                "subject": "AGdjnDoX",
+                "id": "7X-En-1",
+                "total_periods": 6,
+                "period_breakdown": "SSSSSS",
+                "lessons": [
+                  {
+                    "number": 1,
+                    "id": "cls-yu6tzntaf-l1",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml1-mp1"
+                  },
+                  {
+                    "number": 2,
+                    "id": "cls-yu6tzntaf-l2",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml2-mp1"
+                  },
+                  {
+                    "number": 3,
+                    "id": "cls-yu6tzntaf-l3",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml3-mp1"
+                  },
+                  {
+                    "number": 4,
+                    "id": "cls-yu6tzntaf-l4",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml4-mp1"
+                  },
+                  {
+                    "number": 5,
+                    "id": "cls-yu6tzntaf-l5",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml5-mp1"
+                  },
+                  {
+                    "number": 6,
+                    "id": "cls-yu6tzntaf-l6",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml6-mp1"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "number": 2,
+            "classes": [
+              {
+                "subject": "AGdjnDoX",
+                "id": "7X-En-2",
+                "total_periods": 6,
+                "period_breakdown": "SSSSSS",
+                "lessons": [
+                  {
+                    "number": 1,
+                    "id": "b793dc5f-3da9-4d7b-8f62-fc3cafbf74d3-l1",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml1-mp1"
+                  },
+                  {
+                    "number": 2,
+                    "id": "b793dc5f-3da9-4d7b-8f62-fc3cafbf74d3-l2",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml2-mp1"
+                  },
+                  {
+                    "number": 3,
+                    "id": "b793dc5f-3da9-4d7b-8f62-fc3cafbf74d3-l3",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml3-mp1"
+                  },
+                  {
+                    "number": 4,
+                    "id": "b793dc5f-3da9-4d7b-8f62-fc3cafbf74d3-l4",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml4-mp1"
+                  },
+                  {
+                    "number": 5,
+                    "id": "b793dc5f-3da9-4d7b-8f62-fc3cafbf74d3-l5",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml5-mp1"
+                  },
+                  {
+                    "number": 6,
+                    "id": "b793dc5f-3da9-4d7b-8f62-fc3cafbf74d3-l6",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml6-mp1"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "number": 3,
+            "classes": [
+              {
+                "subject": "AGdjnDoX",
+                "id": "7X-En-3",
+                "total_periods": 6,
+                "period_breakdown": "SSSSSS",
+                "lessons": [
+                  {
+                    "number": 1,
+                    "id": "f43542ed-f803-49fe-a934-86b4c27e35b8-l1",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml1-mp1"
+                  },
+                  {
+                    "number": 2,
+                    "id": "f43542ed-f803-49fe-a934-86b4c27e35b8-l2",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml2-mp1"
+                  },
+                  {
+                    "number": 3,
+                    "id": "f43542ed-f803-49fe-a934-86b4c27e35b8-l3",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml3-mp1"
+                  },
+                  {
+                    "number": 4,
+                    "id": "f43542ed-f803-49fe-a934-86b4c27e35b8-l4",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml4-mp1"
+                  },
+                  {
+                    "number": 5,
+                    "id": "f43542ed-f803-49fe-a934-86b4c27e35b8-l5",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml5-mp1"
+                  },
+                  {
+                    "number": 6,
+                    "id": "f43542ed-f803-49fe-a934-86b4c27e35b8-l6",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml6-mp1"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "number": 4,
+            "classes": [
+              {
+                "subject": "AGdjnDoX",
+                "id": "7X-En-4",
+                "total_periods": 6,
+                "period_breakdown": "SSSSSS",
+                "lessons": [
+                  {
+                    "number": 1,
+                    "id": "3248b255-56b4-4b55-8686-25d75ee3ac3c-l1",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml1-mp1"
+                  },
+                  {
+                    "number": 2,
+                    "id": "3248b255-56b4-4b55-8686-25d75ee3ac3c-l2",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml2-mp1"
+                  },
+                  {
+                    "number": 3,
+                    "id": "3248b255-56b4-4b55-8686-25d75ee3ac3c-l3",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml3-mp1"
+                  },
+                  {
+                    "number": 4,
+                    "id": "3248b255-56b4-4b55-8686-25d75ee3ac3c-l4",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml4-mp1"
+                  },
+                  {
+                    "number": 5,
+                    "id": "3248b255-56b4-4b55-8686-25d75ee3ac3c-l5",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml5-mp1"
+                  },
+                  {
+                    "number": 6,
+                    "id": "3248b255-56b4-4b55-8686-25d75ee3ac3c-l6",
+                    "length": 1,
+                    "teacher": [],
+                    "meta_period_id": "block-kd7lwesd3-ml6-mp1"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      ...
+    ]
+  },
+  "staffing": {},
+  "timetable": {},
+  "settings": {
+    "hardConstraints": {
+      "studentConflictPrevention": true,
+      "teacherConflictPrevention": true,
+      "requireSpecialists": true,
+      "classSpacing": true,
+      "maxCapacity": true,
+      "targetCapacity": true,
+      "maximiseCoverFlexibility": true,
+      "doubleLessonRestrictedPeriods": [],
+      "min_slt_available": 2,
+      "max_periods_per_day_per_teacher": 4,
+      "max_teachers_per_class": 2
+    },
+    "softConstraints": {
+      "classSplitting": 50,
+      "balanceWorkload": 50
+    },
+    "classSplitPriorities": {}
+  }
+}
