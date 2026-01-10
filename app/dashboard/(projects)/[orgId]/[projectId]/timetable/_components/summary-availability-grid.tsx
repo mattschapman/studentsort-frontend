@@ -93,7 +93,7 @@ export function SummaryAvailabilityGrid({
         <table className="w-full border-collapse">
           <thead className="bg-white">
             <tr>
-              <th className="sticky left-0 z-10 bg-white border-b border-r px-4 py-2 text-left text-xs font-semibold min-w-36">
+              <th className="sticky left-0 z-10 bg-stone-50 border-b border-r px-4 py-2 text-left text-xs font-semibold min-w-36">
                 Summary
               </th>
               {periods.map((period, index) => {

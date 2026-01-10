@@ -151,7 +151,7 @@ export function SoftConstraintsSettings({
     <div className="space-y-4">
       <div className="flex flex-col gap-0">
         <h2 className="font-medium text-lg">Soft Constraints</h2>
-        <p className="text-sm text-muted-foreground">Adjust the priority score (0-100) for selected constraints</p>
+        <p className="text-xs text-muted-foreground">Adjust the priority score (0-100) for selected constraints</p>
       </div>
       <Card>
         <CardContent className="space-y-6">

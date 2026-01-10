@@ -161,7 +161,7 @@ export default function DashboardHeader({
               {/* Issue indicator */}
               {(hasErrors || hasWarnings) && (
                 <span
-                  className={`absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${
+                  className={`absolute -top-0.5 -right-0.5 size-3 rounded-full border-2 border-white ${
                     hasErrors ? 'bg-red-500' : 'bg-orange-500'
                   }`}
                 />

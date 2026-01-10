@@ -327,7 +327,7 @@ export function FormGroupsGrid({
         <table className="w-full border-collapse">
           <thead className="sticky top-0 z-20 bg-white">
             <tr>
-              <th className="sticky left-0 z-30 bg-white border-b border-r px-4 py-2 text-left text-xs font-semibold min-w-36">
+              <th className="sticky left-0 z-30 bg-stone-50 border-b border-r px-4 py-2 text-left text-xs font-semibold min-w-36">
                 {groupByBand ? "Band" : "Form Group"}
               </th>
               {periods.map((period, index) => {
