@@ -1,4 +1,4 @@
-// app/dashboard/(projects)/[orgId]/[projectId]/timetable/page.tsx
+// NEW - app/dashboard/(projects)/[orgId]/[projectId]/timetable/page.tsx
 "use client";
 
 import { useState, useMemo } from "react";
@@ -312,8 +312,6 @@ export default function TimetablePage() {
                     size="xs"
                     className="text-xs"
                   >
-                    {/* <Wand2 className="size-3" /> */}
-                    {/* <Play className="size-3 fill-white" /> */}
                     Build
                     <ArrowUpRight className="size-3" />
                   </Button>

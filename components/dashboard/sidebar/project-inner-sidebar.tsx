@@ -98,10 +98,10 @@ const innerNavigationItems: Record<string, SectionData> = {
     ]
   },
   settings: {
-    title: "Settings",
+    title: "Project Settings",
     sections: [
       {
-        label: "PROJECT SETTINGS",
+        label: "PROJECT",
         items: [
           {
             label: "General",

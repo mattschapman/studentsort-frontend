@@ -62,19 +62,15 @@ export const navigationSections = [
         isBackButton: false,
         preserveVersion: true,
       },
-    ]
-  },
-  {
-    items: [
-      {
-        label: "Staffing",
-        icon: Users,
-        href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/staffing`,
-        exactMatch: false,
-        hasInnerSidebar: false,
-        isBackButton: false,
-        preserveVersion: true,
-      },
+      // {
+      //   label: "Staffing",
+      //   icon: Users,
+      //   href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/staffing`,
+      //   exactMatch: false,
+      //   hasInnerSidebar: false,
+      //   isBackButton: false,
+      //   preserveVersion: true,
+      // },
       {
         label: "Timetable",
         icon: Calendar,
@@ -86,6 +82,28 @@ export const navigationSections = [
       },
     ]
   },
+  // {
+  //   items: [
+  //     {
+  //       label: "Staffing",
+  //       icon: Users,
+  //       href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/staffing`,
+  //       exactMatch: false,
+  //       hasInnerSidebar: false,
+  //       isBackButton: false,
+  //       preserveVersion: true,
+  //     },
+  //     {
+  //       label: "Timetable",
+  //       icon: Calendar,
+  //       href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/timetable`,
+  //       exactMatch: false,
+  //       hasInnerSidebar: false,
+  //       isBackButton: false,
+  //       preserveVersion: true,
+  //     },
+  //   ]
+  // },
   {
     items: [
       {
