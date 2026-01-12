@@ -97,6 +97,7 @@ export function TimetableViewOptionsPopover({
                 <Switch
                   id="show-form-groups-grid"
                   checked={options.showFormGroupsGrid}
+                  disabled
                   onCheckedChange={(checked) =>
                     handleChange("showFormGroupsGrid", checked)
                   }

@@ -46,6 +46,11 @@ export function FormGroupsGrid({
     return getScheduledPeriod(selectedMetaLessonId, versionData.model.blocks);
   }, [selectedMetaLessonId, versionData]);
 
+  // Calculate total lesson periods in cycle
+  const totalLessonPeriods = useMemo(() => {
+    return periods.filter(p => p.type === 'Lesson').length;
+  }, [periods]);
+
   const filteredFormGroups = useMemo(() => {
     if (!selectedBlockId || feederFormGroupIds.length === 0) {
       return formGroupsAvailability;
@@ -117,8 +122,24 @@ export function FormGroupsGrid({
     return occupiedBlocks;
   };
 
+  // Calculate occupied lesson periods count for a band
+  const getBandOccupiedLessonCount = (formGroups: FormGroupAvailability[]) => {
+    const lessonPeriods = periods.filter(p => p.type === 'Lesson');
+    let occupiedCount = 0;
+    
+    for (const period of lessonPeriods) {
+      const occupiedBlocks = getBandOccupancy(formGroups, period.id);
+      if (occupiedBlocks.length > 0) {
+        occupiedCount++;
+      }
+    }
+    
+    return occupiedCount;
+  };
+
   const renderBandRow = (band: BandGroup) => {
     const isExpanded = expandedBands.has(band.bandId);
+    const occupiedCount = getBandOccupiedLessonCount(band.formGroups);
 
     return (
       <Fragment key={band.bandId}>
@@ -140,6 +161,11 @@ export function FormGroupsGrid({
                 </span>
               </span>
             </button>
+          </td>
+
+          {/* Occupied column */}
+          <td className="sticky left-36 z-10 bg-inherit border-b border-r px-4 py-2 text-xs text-center font-medium">
+            {occupiedCount}/{totalLessonPeriods}
           </td>
 
           {periods.map((period) => {
@@ -200,74 +226,98 @@ export function FormGroupsGrid({
         </tr>
 
         {isExpanded &&
-          band.formGroups.map((formGroup) => (
-            <tr key={formGroup.formGroupId} className="bg-white">
-              <td className="sticky left-0 z-10 bg-inherit border-b border-r px-4 py-2 text-xs font-medium pl-10">
-                {formGroup.formGroupName}
-              </td>
+          band.formGroups.map((formGroup) => {
+            // Calculate occupied lesson count for individual form group
+            const formGroupOccupiedCount = periods
+              .filter(p => p.type === 'Lesson')
+              .filter(p => formGroup.occupiedPeriods[p.id])
+              .length;
 
-              {periods.map((period) => {
-                const occupiedInfo = formGroup.occupiedPeriods[period.id];
-                const isOccupied = !!occupiedInfo;
-                const isSelectedMetaLessonHere = 
-                  selectedMetaLessonId && 
-                  period.id === selectedMetaLessonPeriodId &&
-                  occupiedInfo?.metaLessonId === selectedMetaLessonId;
+            return (
+              <tr key={formGroup.formGroupId} className="bg-white">
+                <td className="sticky left-0 z-10 bg-inherit border-b border-r px-4 py-2 text-xs font-medium pl-10">
+                  {formGroup.formGroupName}
+                </td>
 
-                const bgColor =
-                  showBlockColors && isOccupied
-                    ? occupiedInfo.colorScheme
-                    : isOccupied
-                    ? "bg-stone-200"
-                    : "bg-white";
+                {/* Occupied column for individual form group */}
+                <td className="sticky left-36 z-10 bg-inherit border-b border-r px-4 py-2 text-xs text-center">
+                  {formGroupOccupiedCount}/{totalLessonPeriods}
+                </td>
 
-                const hoverColor =
-                  showBlockColors && isOccupied
-                    ? occupiedInfo.colorScheme
-                    : isOccupied
-                    ? "hover:bg-stone-300"
-                    : "hover:bg-stone-50";
+                {periods.map((period) => {
+                  const occupiedInfo = formGroup.occupiedPeriods[period.id];
+                  const isOccupied = !!occupiedInfo;
+                  const isSelectedMetaLessonHere = 
+                    selectedMetaLessonId && 
+                    period.id === selectedMetaLessonPeriodId &&
+                    occupiedInfo?.metaLessonId === selectedMetaLessonId;
 
-                const borderClass = "border-b border-r";
-                const ringClass = isSelectedMetaLessonHere ? "ring-2 ring-blue-500 ring-inset" : "";
+                  const bgColor =
+                    showBlockColors && isOccupied
+                      ? occupiedInfo.colorScheme
+                      : isOccupied
+                      ? "bg-stone-200"
+                      : "bg-white";
 
-                return (
-                  <td
-                    key={period.id}
-                    className={cn(
-                      "p-0.5 text-center text-xs min-w-8 max-w-8",
-                      borderClass,
-                      ringClass,
-                      bgColor,
-                      hoverColor
-                    )}
-                    title={isOccupied ? occupiedInfo.blockTitle : "Available"}
-                  >
-                    {isOccupied && (
-                      <div className="w-full h-full flex items-center justify-center py-1">
-                        {showBlockTitles ? (
-                          <span className="text-[0.5rem] font-medium truncate">
-                            {occupiedInfo.blockTitle}
-                          </span>
-                        ) : (
-                          <div className="w-1 h-1 bg-stone-600 rounded-full" />
-                        )}
-                      </div>
-                    )}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
+                  const hoverColor =
+                    showBlockColors && isOccupied
+                      ? occupiedInfo.colorScheme
+                      : isOccupied
+                      ? "hover:bg-stone-300"
+                      : "hover:bg-stone-50";
+
+                  const borderClass = "border-b border-r";
+                  const ringClass = isSelectedMetaLessonHere ? "ring-2 ring-blue-500 ring-inset" : "";
+
+                  return (
+                    <td
+                      key={period.id}
+                      className={cn(
+                        "p-0.5 text-center text-xs min-w-8 max-w-8",
+                        borderClass,
+                        ringClass,
+                        bgColor,
+                        hoverColor
+                      )}
+                      title={isOccupied ? occupiedInfo.blockTitle : "Available"}
+                    >
+                      {isOccupied && (
+                        <div className="w-full h-full flex items-center justify-center py-1">
+                          {showBlockTitles ? (
+                            <span className="text-[0.5rem] font-medium truncate">
+                              {occupiedInfo.blockTitle}
+                            </span>
+                          ) : (
+                            <div className="w-1 h-1 bg-stone-600 rounded-full" />
+                          )}
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
       </Fragment>
     );
   };
 
   const renderFormGroupRow = (formGroup: FormGroupAvailability) => {
+    // Calculate occupied lesson count for individual form group
+    const formGroupOccupiedCount = periods
+      .filter(p => p.type === 'Lesson')
+      .filter(p => formGroup.occupiedPeriods[p.id])
+      .length;
+
     return (
       <tr key={formGroup.formGroupId} className="bg-white">
         <td className="sticky left-0 z-10 bg-inherit border-b border-r px-4 py-2 text-xs font-medium">
           {formGroup.formGroupName}
+        </td>
+
+        {/* Occupied column */}
+        <td className="sticky left-36 z-10 bg-inherit border-b border-r px-4 py-2 text-xs text-center">
+          {formGroupOccupiedCount}/{totalLessonPeriods}
         </td>
 
         {periods.map((period) => {
@@ -325,28 +375,11 @@ export function FormGroupsGrid({
     );
   };
 
-  if (!selectedBlockId) {
-    return (
-      <div className="h-full w-full flex flex-col items-center justify-center bg-stone-100">
-        <div className="flex flex-col items-center gap-3 text-center px-8">
-          <div>
-            <h3 className="text-sm font-medium text-stone-700 mb-1">
-              No Lesson Selected
-            </h3>
-            <p className="text-xs text-muted-foreground max-w-md">
-              Select a meta lesson from the left panel to view form group availability.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (!filteredFormGroups.length) {
     return (
       <div className="flex items-center justify-center h-full">
         <p className="text-sm text-muted-foreground">
-          No form groups found for the selected lesson
+          No form groups found
         </p>
       </div>
     );
@@ -368,6 +401,9 @@ export function FormGroupsGrid({
             <tr>
               <th className="sticky left-0 z-30 bg-stone-50 border-b border-r px-4 py-2 text-left text-xs font-semibold min-w-36">
                 {groupByBand ? "Band" : "Form Group"}
+              </th>
+              <th className="sticky left-36 z-30 bg-stone-50 border-b border-r px-4 py-2 text-center text-xs font-semibold min-w-20">
+                Occupied
               </th>
               {periods.map((period, index) => {
                 const label = getPeriodLabel(period, periods, index);

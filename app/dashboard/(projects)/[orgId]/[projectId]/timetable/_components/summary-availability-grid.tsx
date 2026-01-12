@@ -64,6 +64,20 @@ export function SummaryAvailabilityGrid({
     );
   }, [selectedBlock, selectedMetaLessonId, periods, formGroupsAvailability]);
 
+  // Calculate total lesson periods and unavailable count
+  const { totalLessonPeriods, unavailableCount } = useMemo(() => {
+    const lessonPeriods = periods.filter(p => p.type === 'Lesson');
+    const unavailable = periodAvailabilities.filter(pa => {
+      const period = periods.find(p => p.id === pa.periodId);
+      return period?.type === 'Lesson' && !pa.isAvailable;
+    }).length;
+    
+    return {
+      totalLessonPeriods: lessonPeriods.length,
+      unavailableCount: unavailable
+    };
+  }, [periods, periodAvailabilities]);
+
   const handlePeriodClick = (
     periodId: string,
     isAvailable: boolean,
@@ -114,6 +128,9 @@ export function SummaryAvailabilityGrid({
               <th className="sticky left-0 z-10 bg-stone-50 border-b border-r px-4 py-2 text-left text-xs font-semibold min-w-36">
                 Summary
               </th>
+              <th className="sticky left-36 z-10 bg-stone-50 border-b border-r px-4 py-2 text-center text-xs font-semibold min-w-20">
+                Occupied
+              </th>
               {periods.map((period, index) => {
                 const label = getPeriodLabel(period, periods, index);
                 const isLesson = period.type === 'Lesson';
@@ -136,7 +153,12 @@ export function SummaryAvailabilityGrid({
           <tbody>
             <tr>
               <td className="sticky left-0 z-10 bg-white border-r px-4 py-2 text-xs font-medium">
-                Available periods
+                Bands + Teachers
+              </td>
+
+              {/* Occupied column */}
+              <td className="sticky left-36 z-10 bg-white border-r px-4 py-2 text-xs text-center">
+                {unavailableCount}/{totalLessonPeriods}
               </td>
 
               {periodAvailabilities.map((availability) => {

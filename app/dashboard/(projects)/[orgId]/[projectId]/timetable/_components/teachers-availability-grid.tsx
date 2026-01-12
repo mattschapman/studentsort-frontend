@@ -68,6 +68,11 @@ export function TeachersGrid({
     return getAssignedTeacher(selectedLessonId, versionData.model.blocks);
   }, [selectedLessonId, versionData]);
 
+  // Calculate total lesson periods in cycle
+  const totalLessonPeriods = useMemo(() => {
+    return periods.filter(p => p.type === 'Lesson').length;
+  }, [periods]);
+
   // Get all lesson IDs in the same class as the selected lesson
   const selectedClassLessonIds = useMemo(() => {
     if (!selectedLessonId) return new Set<string>();
@@ -113,6 +118,12 @@ export function TeachersGrid({
     // Get all year group IDs to check if teacher is eligible for all
     const allYearGroupIds = new Set(versionData.data.year_groups.map((yg: YearGroup) => yg.id));
 
+    // Calculate occupied lesson count for teacher
+    const teacherOccupiedCount = periods
+      .filter(p => p.type === 'Lesson')
+      .filter(p => teacher.occupiedPeriods[p.id])
+      .length;
+
     return (
       <tr key={teacher.teacherId} className="bg-white">
         <td className="sticky left-0 z-10 bg-inherit border-b border-r px-4 py-2 text-xs font-medium">
@@ -153,6 +164,11 @@ export function TeachersGrid({
               })}
             </div>
           </div>
+        </td>
+
+        {/* Occupied column */}
+        <td className="sticky left-36 z-10 bg-inherit border-b border-r px-4 py-2 text-xs text-center">
+          {teacherOccupiedCount}/{totalLessonPeriods}
         </td>
 
         {periods.map((period) => {
@@ -289,6 +305,9 @@ export function TeachersGrid({
             <tr>
               <th className="sticky left-0 z-30 bg-stone-50 border-b border-r px-4 py-2 text-left text-xs font-semibold min-w-36">
                 Teacher
+              </th>
+              <th className="sticky left-36 z-30 bg-stone-50 border-b border-r px-4 py-2 text-center text-xs font-semibold min-w-20">
+                Occupied
               </th>
               {periods.map((period, index) => {
                 const label = getPeriodLabel(period, periods, index);
