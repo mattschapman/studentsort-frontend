@@ -80,7 +80,7 @@ export function TimetableProgressPopover({ blocks }: TimetableProgressPopoverPro
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="xs" className="text-xs font-normal">
+        <Button variant="ghost" size="xs" className="text-xs font-normal text-muted-foreground">
           {Math.round(progress.combined)}% complete
         </Button>
       </PopoverTrigger>

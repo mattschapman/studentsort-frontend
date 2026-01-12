@@ -402,15 +402,15 @@ function InnerGroupComponent({
       >
         <AccordionTrigger 
           className={cn(
-            "px-2 py-1 text-left text-xs hover:no-underline rounded-sm border-b",
+            "px-2 py-1 text-left text-xs hover:no-underline rounded-sm border-b max-w-full ",
             "data-[state=open]:rounded-b-none",
             "data-[state=open]:border-border",
             innerGroup.color
           )}
         >
-          <div className="flex gap-1.5 items-center w-full pr-2">
-            <div className="font-medium">{innerGroup.title}</div>
-            <div className="text-[10px] text-muted-foreground">
+          <div className="flex gap-1.5 items-center max-w-[80%]">
+            <div className="font-medium whitespace-nowrap">{innerGroup.title}</div>
+            <div className="text-[10px] text-muted-foreground truncate">
               {`${scheduledCount}/${innerGroup.metaLessons.length} scheduled`}
               {totalLessonSpans > 0 && ` • ${staffedCount}/${totalLessonSpans} staffed`}
             </div>
