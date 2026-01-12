@@ -171,7 +171,8 @@ export function computeFormGroupsAvailability(
   // Process each block to mark occupied periods
   for (const block of versionData.model.blocks) {
     const subject = getBlockSubject(block);
-    const colorScheme = subject?.color_scheme || block.color_scheme || 'bg-gray-200';
+    const colorScheme = block.color_scheme || 'bg-gray-200';
+    // const colorScheme = subject?.color_scheme || block.color_scheme || 'bg-gray-200';
     
     // For each meta lesson in the block
     for (const metaLesson of block.meta_lessons) {

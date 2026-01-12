@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Loader2, Play, Wand2 } from "lucide-react";
+import { ArrowUpRight, Loader2, Play, Wand2 } from "lucide-react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -313,8 +313,9 @@ export default function TimetablePage() {
                     className="text-xs"
                   >
                     {/* <Wand2 className="size-3" /> */}
-                    <Play className="size-3 fill-white" />
+                    {/* <Play className="size-3 fill-white" /> */}
                     Build
+                    <ArrowUpRight className="size-3" />
                   </Button>
                 </div>
                 <div className="flex items-center gap-2">
@@ -352,6 +353,7 @@ export default function TimetablePage() {
                           periods={filteredPeriods}
                           formGroupsAvailability={formGroupsAvailability}
                           selectedBlockId={selectedBlockId}
+                          selectedMetaLessonId={selectedMetaLessonId}
                           feederFormGroupIds={effectiveFeederFormGroupIds}
                           showBlockColors={gridViewOptions.useBlockColors}
                           showBlockTitles={gridViewOptions.showBlockTitles}

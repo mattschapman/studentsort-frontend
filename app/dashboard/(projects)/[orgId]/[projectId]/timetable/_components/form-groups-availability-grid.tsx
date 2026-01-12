@@ -5,6 +5,7 @@ import { useState, Fragment, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import type { FormGroupAvailability, Period } from "../_types/timetable.types";
+import { getScheduledPeriod } from "../_lib/compute-timetable-availability";
 import { getPeriodLabel } from "../_lib/period-label-utils";
 
 interface FormGroupsGridProps {
@@ -12,6 +13,7 @@ interface FormGroupsGridProps {
   periods: Period[];
   formGroupsAvailability: FormGroupAvailability[];
   selectedBlockId: string | null;
+  selectedMetaLessonId: string | null;
   feederFormGroupIds: string[];
   showBlockColors?: boolean;
   showBlockTitles?: boolean;
@@ -30,12 +32,19 @@ export function FormGroupsGrid({
   periods,
   formGroupsAvailability,
   selectedBlockId,
+  selectedMetaLessonId,
   feederFormGroupIds,
   showBlockColors = true,
   showBlockTitles = false,
   groupByBand = true,
 }: FormGroupsGridProps) {
   const [expandedBands, setExpandedBands] = useState<Set<string>>(new Set());
+
+  // Get the period where the selected meta lesson is scheduled
+  const selectedMetaLessonPeriodId = useMemo(() => {
+    if (!selectedMetaLessonId) return null;
+    return getScheduledPeriod(selectedMetaLessonId, versionData.model.blocks);
+  }, [selectedMetaLessonId, versionData]);
 
   const filteredFormGroups = useMemo(() => {
     if (!selectedBlockId || feederFormGroupIds.length === 0) {
@@ -88,6 +97,7 @@ export function FormGroupsGrid({
       blockTitle: string;
       blockId: string;
       colorScheme: string;
+      metaLessonId: string;
     }[] = [];
 
     for (const formGroup of formGroups) {
@@ -98,6 +108,7 @@ export function FormGroupsGrid({
             blockTitle: occupiedInfo.blockTitle,
             blockId: occupiedInfo.blockId,
             colorScheme: occupiedInfo.colorScheme,
+            metaLessonId: occupiedInfo.metaLessonId,
           });
         }
       }
@@ -134,6 +145,11 @@ export function FormGroupsGrid({
           {periods.map((period) => {
             const occupiedBlocks = getBandOccupancy(band.formGroups, period.id);
             const isOccupied = occupiedBlocks.length > 0;
+            const isSelectedMetaLessonHere = 
+              selectedMetaLessonId && 
+              period.id === selectedMetaLessonPeriodId &&
+              occupiedBlocks.some((b) => b.metaLessonId === selectedMetaLessonId);
+            
             const tooltipText = isOccupied
               ? occupiedBlocks.map((b) => b.blockTitle).join(", ")
               : "Available";
@@ -152,11 +168,16 @@ export function FormGroupsGrid({
                 ? "hover:bg-stone-400"
                 : "hover:bg-stone-100";
 
+            const borderClass = "border-b border-r";
+            const ringClass = isSelectedMetaLessonHere ? "ring-2 ring-blue-500 ring-inset" : "";
+
             return (
               <td
                 key={period.id}
                 className={cn(
-                  "border-b border-r p-0.5 text-center text-xs min-w-8 max-w-8",
+                  "p-0.5 text-center text-xs min-w-8 max-w-8",
+                  borderClass,
+                  ringClass,
                   bgColor,
                   hoverColor
                 )}
@@ -188,6 +209,10 @@ export function FormGroupsGrid({
               {periods.map((period) => {
                 const occupiedInfo = formGroup.occupiedPeriods[period.id];
                 const isOccupied = !!occupiedInfo;
+                const isSelectedMetaLessonHere = 
+                  selectedMetaLessonId && 
+                  period.id === selectedMetaLessonPeriodId &&
+                  occupiedInfo?.metaLessonId === selectedMetaLessonId;
 
                 const bgColor =
                   showBlockColors && isOccupied
@@ -203,11 +228,16 @@ export function FormGroupsGrid({
                     ? "hover:bg-stone-300"
                     : "hover:bg-stone-50";
 
+                const borderClass = "border-b border-r";
+                const ringClass = isSelectedMetaLessonHere ? "ring-2 ring-blue-500 ring-inset" : "";
+
                 return (
                   <td
                     key={period.id}
                     className={cn(
-                      "border-b border-r p-0.5 text-center text-xs min-w-8 max-w-8",
+                      "p-0.5 text-center text-xs min-w-8 max-w-8",
+                      borderClass,
+                      ringClass,
                       bgColor,
                       hoverColor
                     )}
@@ -243,6 +273,10 @@ export function FormGroupsGrid({
         {periods.map((period) => {
           const occupiedInfo = formGroup.occupiedPeriods[period.id];
           const isOccupied = !!occupiedInfo;
+          const isSelectedMetaLessonHere = 
+            selectedMetaLessonId && 
+            period.id === selectedMetaLessonPeriodId &&
+            occupiedInfo?.metaLessonId === selectedMetaLessonId;
 
           const bgColor =
             showBlockColors && isOccupied
@@ -258,11 +292,16 @@ export function FormGroupsGrid({
               ? "hover:bg-stone-300"
               : "hover:bg-stone-50";
 
+          const borderClass = "border-b border-r";
+          const ringClass = isSelectedMetaLessonHere ? "ring-2 ring-blue-500 ring-inset" : "";
+
           return (
             <td
               key={period.id}
               className={cn(
-                "border-b border-r p-0.5 text-center text-xs min-w-8 max-w-8",
+                "p-0.5 text-center text-xs min-w-8 max-w-8",
+                borderClass,
+                ringClass,
                 bgColor,
                 hoverColor
               )}

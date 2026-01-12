@@ -1,4 +1,4 @@
-// // app/dashboard/(projects)/[orgId]/[projectId]/timetable/_components/meta-lessons.tsx
+// app/dashboard/(projects)/[orgId]/[projectId]/timetable/_components/meta-lessons.tsx
 "use client";
 
 import { useMemo } from "react";
@@ -30,10 +30,28 @@ interface LessonSpan {
   id: string;
   title: string;
   metaPeriodId: string;
+  teacherId: string;
+}
+
+// Helper function to check if a meta lesson is scheduled
+function isMetaLessonScheduled(metaLesson: any): boolean {
+  return metaLesson.meta_periods?.some((mp: any) => mp.start_period_id && mp.start_period_id !== "") ?? false;
+}
+
+// Helper function to check if a lesson is staffed
+function isLessonStaffed(lesson: LessonSpan): boolean {
+  return lesson.teacherId !== "";
 }
 
 // Helper function to get color classes based on block color
-function getColorClasses(blockColor: string | undefined) {
+function getColorClasses(blockColor: string | undefined, isScheduled: boolean) {
+  // If scheduled, use gray styling regardless of block color
+  if (isScheduled) {
+    return {
+      bg: 'bg-gray-50 text-muted-foreground',
+    };
+  }
+  
   // Extract base color name (e.g., "blue" from "bg-blue-200")
   const colorMatch = blockColor?.match(/(?:bg|border|text)-(\w+)-/);
   const color = colorMatch?.[1] || 'blue';
@@ -67,7 +85,8 @@ function MetaLessonCard({
   blockColor,
 }: MetaLessonCardProps) {
   const lessonIndex = block.meta_lessons.findIndex((ml) => ml.id === metaLesson.id);
-  const colors = getColorClasses(blockColor);
+  const isScheduled = isMetaLessonScheduled(metaLesson);
+  const colors = getColorClasses(blockColor, isScheduled);
 
   return (
     <div
@@ -91,20 +110,25 @@ function MetaLessonCard({
 
       {/* Individual Lesson Spans (Right) */}
       <div className="flex items-center gap-1 p-1">
-        {lessonSpans.map((lesson) => (
-          <button
-            key={lesson.id}
-            onClick={() => onSelectLesson(block.id, metaLesson.id, lesson.id)}
-            className={cn(
-              "rounded-xs border px-2 py-1 hover:bg-gray-50",
-              selectedLessonId === lesson.id
-                ? "border-blue-500 bg-blue-100"
-                : "border-dashed border-gray-200"
-            )}
-          >
-            {lesson.title}
-          </button>
-        ))}
+        {lessonSpans.map((lesson) => {
+          const staffed = isLessonStaffed(lesson);
+          return (
+            <button
+              key={lesson.id}
+              onClick={() => onSelectLesson(block.id, metaLesson.id, lesson.id)}
+              className={cn(
+                "rounded-xs border px-2 py-1 hover:bg-gray-50 border-dashed",
+                selectedLessonId === lesson.id
+                  ? "border-blue-500 bg-blue-100"
+                  : staffed
+                  ? "bg-gray-50 text-muted-foreground"
+                  : ""
+              )}
+            >
+              {lesson.title}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -146,6 +170,7 @@ export function MetaLessons({
                 id: lesson.id,
                 title: lesson.title || `L${lesson.number}`,
                 metaPeriodId: lesson.meta_period_id,
+                teacherId: lesson.teacher_id || "",
               });
             }
           });
@@ -325,6 +350,27 @@ function InnerGroupComponent({
   onSelectLesson,
   getLessonSpans,
 }: InnerGroupComponentProps) {
+  // Calculate scheduled and staffed counts for accordion
+  const { scheduledCount, staffedCount, totalLessonSpans } = useMemo(() => {
+    const scheduled = innerGroup.metaLessons.filter(ml => isMetaLessonScheduled(ml)).length;
+    
+    // Count total lesson spans and how many are staffed
+    let totalSpans = 0;
+    let staffed = 0;
+    
+    innerGroup.metaLessons.forEach(ml => {
+      const spans = getLessonSpans(ml);
+      totalSpans += spans.length;
+      staffed += spans.filter(span => isLessonStaffed(span)).length;
+    });
+    
+    return {
+      scheduledCount: scheduled,
+      staffedCount: staffed,
+      totalLessonSpans: totalSpans
+    };
+  }, [innerGroup.metaLessons, getLessonSpans]);
+
   if (!showAsAccordion) {
     // No inner grouping - just render lessons flat
     return (
@@ -365,7 +411,8 @@ function InnerGroupComponent({
           <div className="flex gap-1.5 items-center w-full pr-2">
             <div className="font-medium">{innerGroup.title}</div>
             <div className="text-[10px] text-muted-foreground">
-              {innerGroup.metaLessons.length} {innerGroup.metaLessons.length === 1 ? 'lesson' : 'lessons'}
+              {`${scheduledCount}/${innerGroup.metaLessons.length} scheduled`}
+              {totalLessonSpans > 0 && ` • ${staffedCount}/${totalLessonSpans} staffed`}
             </div>
           </div>
         </AccordionTrigger>

@@ -55,7 +55,7 @@ export function SaveVersionButton({ projectId, orgId }: SaveVersionButtonProps) 
 
   return (
     <Button
-      variant="outline"
+      variant={hasUnsavedChanges ? "outline" : "ghost"}
       size="xs"
       onClick={handleSave}
       disabled={!hasUnsavedChanges || isSaving}

@@ -214,9 +214,8 @@ export function TeachersGrid({
             tooltipText = "Available";
           }
 
-          const borderClass = isAssignedHere
-            ? "border-2 border-blue-500"
-            : "border-b border-r";
+          const borderClass = "border-b border-r";
+          const ringClass = isAssignedHere ? "ring-2 ring-blue-500 ring-inset" : "";
 
           return (
             <td
@@ -224,6 +223,7 @@ export function TeachersGrid({
               className={cn(
                 "p-0.5 text-center text-xs min-w-8 max-w-8",
                 borderClass,
+                ringClass,
                 bgColor,
                 hoverColor,
                 greyOutStyle,

@@ -50,7 +50,7 @@ export function FilterSortGroupControls({
 
   const getFieldDisplayName = (field: string) => {
     switch (field) {
-      case 'year-group': return 'Year group';
+      case 'year-group': return 'Year';
       case 'subject': return 'Subject';
       default: return field;
     }
@@ -163,7 +163,7 @@ export function FilterSortGroupControls({
           <div className="p-1">
             {[
               { value: 'none', label: 'None' },
-              { value: 'year-group', label: 'Year group' },
+              { value: 'year-group', label: 'Year' },
               { value: 'subject', label: 'Subject' }
             ].map(option => (
               <DropdownMenuItem
@@ -242,7 +242,7 @@ export function FilterSortGroupControls({
                 <span className="py-0.5">{getFieldDisplayName(filter.field)}</span>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" size="xs" className="h-8 p-1 text-xs gap-[0.1rem] font-bold">
+                    <Button variant="ghost" size="xs" className="-ml-0.5 p-1 text-xs gap-[0.1rem] font-bold">
                       {filter.operator === 'is' ? 'is' : 'is not'}
                       <ChevronDown className="h-3 w-3" />
                     </Button>
@@ -286,7 +286,7 @@ export function FilterSortGroupControls({
               placeholder="Select one or more options..."
               value={searchTerm}
               onChange={(e) => actions.setFilterSearchTerms(prev => ({ ...prev, [filter.id]: e.target.value }))}
-              className="h-8 text-xs"
+              className="h-8 text-xs placeholder:text-xs"
               autoFocus
             />
           </div>

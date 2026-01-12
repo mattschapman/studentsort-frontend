@@ -37,6 +37,24 @@ export function SummaryAvailabilityGrid({
     return getScheduledPeriod(selectedMetaLessonId, versionData.model.blocks);
   }, [selectedMetaLessonId, versionData]);
 
+  // Get all other meta lessons in the same block and their scheduled periods
+  const otherMetaLessonsInBlock = useMemo(() => {
+    if (!selectedBlock || !selectedMetaLessonId) return new Map<string, string>();
+    
+    const map = new Map<string, string>(); // periodId -> metaLessonId
+    
+    for (const metaLesson of selectedBlock.meta_lessons) {
+      if (metaLesson.id === selectedMetaLessonId) continue; // Skip the selected one
+      
+      const scheduledPeriod = getScheduledPeriod(metaLesson.id, versionData.model.blocks);
+      if (scheduledPeriod) {
+        map.set(scheduledPeriod, metaLesson.id);
+      }
+    }
+    
+    return map;
+  }, [selectedBlock, selectedMetaLessonId, versionData]);
+
   const periodAvailabilities = useMemo(() => {
     return evaluateMetaLessonAvailability(
       selectedBlock,
@@ -124,13 +142,17 @@ export function SummaryAvailabilityGrid({
               {periodAvailabilities.map((availability) => {
                 const isAvailable = availability.isAvailable;
                 const isScheduledHere = scheduledPeriodId === availability.periodId;
+                const isOtherMetaLessonHere = otherMetaLessonsInBlock.has(availability.periodId);
                 const isClickable = isScheduledHere || isAvailable;
 
-                const bgColor = isScheduledHere
+                const bgColor = isScheduledHere || isOtherMetaLessonHere
                   ? blockColor
                   : isAvailable
                   ? "bg-white"
                   : "bg-stone-200";
+
+                const borderClass = "border-r";
+                const ringClass = isScheduledHere ? "ring-2 ring-blue-500 ring-inset" : "";
 
                 const hoverColor = isScheduledHere
                   ? "hover:opacity-80"
@@ -141,6 +163,8 @@ export function SummaryAvailabilityGrid({
                 let tooltipText = "Click to schedule here";
                 if (isScheduledHere) {
                   tooltipText = `Scheduled: ${selectedBlock.title} - Click to unschedule`;
+                } else if (isOtherMetaLessonHere) {
+                  tooltipText = `Another lesson from ${selectedBlock.title} scheduled here`;
                 } else if (!isAvailable) {
                   const reasons: string[] = [];
                   if (availability.reasons?.formGroupsOccupied) {
@@ -153,7 +177,9 @@ export function SummaryAvailabilityGrid({
                   <td
                     key={availability.periodId}
                     className={cn(
-                      "border-r py-0.5 text-center text-xs min-w-8 max-w-8",
+                      "py-0.5 text-center text-xs min-w-8 max-w-8",
+                      borderClass,
+                      ringClass,
                       bgColor,
                       hoverColor,
                       isClickable && "cursor-pointer"
@@ -164,6 +190,12 @@ export function SummaryAvailabilityGrid({
                     }
                   >
                     {isScheduledHere ? (
+                      <div className="w-full h-full flex items-center justify-center py-1">
+                        <span className="text-[0.5rem] truncate font-medium">
+                          {selectedBlock.title}
+                        </span>
+                      </div>
+                    ) : isOtherMetaLessonHere ? (
                       <div className="w-full h-full flex items-center justify-center py-1">
                         <span className="text-[0.5rem] truncate font-medium">
                           {selectedBlock.title}
