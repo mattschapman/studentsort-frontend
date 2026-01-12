@@ -91,9 +91,9 @@ function MetaLessonCard({
   return (
     <div
       className={cn(
-        "rounded-sm border flex items-center text-[10px] leading-none h-8 whitespace-nowrap overflow-x-auto overflow-y-hidden",
+        "rounded-sm border border-gray-200 flex items-center text-[10px] leading-none h-8 whitespace-nowrap overflow-x-auto overflow-y-hidden",
         isGroupedByBlock ? "w-fit" : "w-full",
-        isSelected ? "border-blue-500" : "border-gray-200"
+        isSelected ? "ring-2 ring-blue-500" : ""
       )}
     >
       {/* Meta Lesson Container (Left) */}
@@ -117,9 +117,9 @@ function MetaLessonCard({
               key={lesson.id}
               onClick={() => onSelectLesson(block.id, metaLesson.id, lesson.id)}
               className={cn(
-                "rounded-xs border px-2 py-1 hover:bg-gray-50 border-dashed",
+                "rounded-xs border border-dashed px-2 py-1 hover:bg-gray-50",
                 selectedLessonId === lesson.id
-                  ? "border-blue-500 bg-blue-100"
+                  ? "ring-2 ring-blue-500 bg-blue-100"
                   : staffed
                   ? "bg-gray-50 text-muted-foreground"
                   : ""
@@ -398,13 +398,13 @@ function InnerGroupComponent({
     <Accordion type="single" collapsible className="w-full">
       <AccordionItem 
         value={innerGroup.id} 
-        className="border border-transparent data-[state=open]:border-blue-200 rounded-md"
+        className="border border-transparent data-[state=open]:border-border rounded-md"
       >
         <AccordionTrigger 
           className={cn(
             "px-2 py-1 text-left text-xs hover:no-underline rounded-sm border-b",
             "data-[state=open]:rounded-b-none",
-            "data-[state=open]:border-blue-200",
+            "data-[state=open]:border-border",
             innerGroup.color
           )}
         >
@@ -416,7 +416,7 @@ function InnerGroupComponent({
             </div>
           </div>
         </AccordionTrigger>
-        <AccordionContent className="p-2 rounded-b-sm border-b border-b-blue-200">
+        <AccordionContent className="p-2 rounded-b-sm border-b border-b-border">
           <div className="flex gap-1 flex-wrap">
             {innerGroup.metaLessons.map((metaLessonWithBlock) => (
               <MetaLessonCard
