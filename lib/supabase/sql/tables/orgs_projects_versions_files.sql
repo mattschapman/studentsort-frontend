@@ -470,6 +470,34 @@ CREATE POLICY "files_storage_delete_by_admin"
     public.is_org_admin(auth.uid(), (storage.foldername(name))[1])
   );
 
+
+
+-- Allow service role to upload files
+CREATE POLICY "files_storage_service_role_upload"
+  ON storage.objects FOR INSERT
+  TO service_role
+  WITH CHECK (
+    bucket_id = 'projects_versions_files_storage'
+  );
+
+-- Allow service role to update files
+CREATE POLICY "files_storage_service_role_update"
+  ON storage.objects FOR UPDATE
+  TO service_role
+  USING (bucket_id = 'projects_versions_files_storage')
+  WITH CHECK (bucket_id = 'projects_versions_files_storage');
+
+-- Allow service role to delete files
+CREATE POLICY "files_storage_service_role_delete"
+  ON storage.objects FOR DELETE
+  TO service_role
+  USING (bucket_id = 'projects_versions_files_storage');
+
+
+
+
+
+
 -- ============================================================================
 -- 11. GRANT PERMISSIONS
 -- ============================================================================

@@ -93,7 +93,7 @@ export function LoginForm({
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 
-                <Loader2 className="w-4 h-4 animate-spin" /> : "Login"}
+                <Loader2 className="w-4 h-4 animate-spin" /> : "Log in"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
