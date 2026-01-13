@@ -195,15 +195,15 @@ export default function ProjectInnerSidebar({ orgId, projectId }: ProjectInnerSi
             label: "OTHER ACTIVITIES",
             items: otherActivitiesItems
           },
-          {
-            label: 'MANAGE',
-            items: [
-              {
-                label: 'Batches',
-                href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/model/batches`,
-              }
-            ]
-          }
+          // {
+          //   label: 'MANAGE',
+          //   items: [
+          //     {
+          //       label: 'Batches',
+          //       href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/model/batches`,
+          //     }
+          //   ]
+          // }
         ]
       }
     }
@@ -226,15 +226,15 @@ export default function ProjectInnerSidebar({ orgId, projectId }: ProjectInnerSi
           label: "OTHER ACTIVITIES",
           items: otherActivitiesItems
         },
-        {
-          label: 'MANAGE',
-          items: [
-            {
-              label: 'Batches',
-              href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/model/batches`,
-            }
-          ]
-        }
+        // {
+        //   label: 'MANAGE',
+        //   items: [
+        //     {
+        //       label: 'Batches',
+        //       href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/model/batches`,
+        //     }
+        //   ]
+        // }
       ]
     }
   }

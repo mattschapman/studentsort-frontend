@@ -48,7 +48,7 @@ export function getTailwindColorValue(colorScheme: string | null | undefined): s
     'bg-gray-300': '#d1d5db',
   };
   
-  return colorMap[colorScheme] || '#f3f4f6';
+  return colorMap[colorScheme] || '#dbeafe';
 }
 
 export function getSubjectAbbreviation(subjectId: string, subjects: Array<{ id: string; abbreviation: string }>): string {

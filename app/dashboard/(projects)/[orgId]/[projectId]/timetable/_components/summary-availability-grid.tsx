@@ -153,7 +153,7 @@ export function SummaryAvailabilityGrid({
           <tbody>
             <tr>
               <td className="sticky left-0 z-10 bg-white border-r px-4 py-2 text-xs font-medium">
-                Bands/staff availability
+                Bands/staff
               </td>
 
               {/* Occupied column */}
