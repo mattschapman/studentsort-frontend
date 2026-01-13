@@ -416,7 +416,7 @@ export default function TimetablePage() {
       <div className="h-full w-full bg-white">
         <ResizablePanelGroup orientation="horizontal" className="h-full">
           {/* Left Column: Meta Lessons */}
-          <ResizablePanel defaultSize={300} minSize={200} maxSize={300}>
+          <ResizablePanel defaultSize={'20'} minSize={'20'} maxSize={'40'}>
             <div className="h-full flex flex-col min-h-0">
               <div className="py-2 px-4.5 border-b flex justify-between items-center shrink-0">
                 <h2 className="font-semibold">Timetable</h2>
@@ -437,7 +437,7 @@ export default function TimetablePage() {
           <ResizableHandle withHandle />
 
           {/* Right Column: Schedule Grids */}
-          <ResizablePanel defaultSize={80}>
+          <ResizablePanel defaultSize={'80'}>
             <div className="h-full flex flex-col min-h-0 bg-stone-100">
               {/* Toolbar */}
               <div className="shrink-0 bg-white flex justify-between items-center px-4 py-3 border-b">

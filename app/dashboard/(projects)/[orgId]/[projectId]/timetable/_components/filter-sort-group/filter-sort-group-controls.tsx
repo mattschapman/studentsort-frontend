@@ -133,7 +133,8 @@ export function FilterSortGroupControls({
 
     let buttonText = 'Group by';
     if (hasOuterGrouping && hasInnerGrouping) {
-      buttonText = `${getFieldDisplayName(state.outerGroupBy)} → Block`;
+      // buttonText = `${getFieldDisplayName(state.outerGroupBy)} → Block`;
+      buttonText = 'Group by (2)'
     } else if (hasOuterGrouping) {
       buttonText = `${getFieldDisplayName(state.outerGroupBy)}`;
     } else if (hasInnerGrouping) {
