@@ -82,3 +82,33 @@ CREATE TRIGGER set_autoscheduling_jobs_updated_at
   BEFORE UPDATE ON public.autoscheduling_jobs
   FOR EACH ROW
   EXECUTE FUNCTION update_autoscheduling_jobs_updated_at();
+
+
+
+
+
+-- Migration: Add stage column to autoscheduling_jobs table
+-- Description: Adds a stage column to track the current processing stage
+
+-- Add stage column (nullable to support existing jobs)
+ALTER TABLE autoscheduling_jobs
+ADD COLUMN IF NOT EXISTS stage TEXT;
+
+-- Optional: Add a check constraint to ensure valid stage values
+ALTER TABLE autoscheduling_jobs
+ADD CONSTRAINT valid_stage CHECK (
+  stage IS NULL OR stage IN (
+    'initialising',
+    'constructing_blocks',
+    'scheduling_lessons',
+    'finding_teachers',
+    'checking_everything'
+  )
+);
+
+-- Optional: Add an index for querying by stage
+CREATE INDEX IF NOT EXISTS idx_autoscheduling_jobs_stage 
+ON autoscheduling_jobs(stage);
+
+-- Optional: Comment for documentation
+COMMENT ON COLUMN autoscheduling_jobs.stage IS 'Current processing stage of the auto-scheduling job';

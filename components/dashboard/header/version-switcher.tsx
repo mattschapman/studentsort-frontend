@@ -25,6 +25,26 @@ interface VersionSwitcherProps {
   currentVersionId?: string;
 }
 
+// Helper function to format relative time
+function getRelativeTime(dateString: string): string {
+  const now = new Date();
+  const created = new Date(dateString);
+  const diffInMs = now.getTime() - created.getTime();
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+  if (diffInMinutes < 1) {
+    return "Just now";
+  } else if (diffInMinutes < 60) {
+    return `${diffInMinutes}m ago`;
+  } else if (diffInHours < 24) {
+    return `${diffInHours}h ago`;
+  } else {
+    return `${diffInDays}d ago`;
+  }
+}
+
 export default function VersionSwitcher({
   versions,
   currentProjectId,
@@ -83,7 +103,10 @@ export default function VersionSwitcher({
         >
           {currentVersion ? (
             <div className="flex items-center gap-2">
-              v{currentVersion.version}
+              <span>v{currentVersion.version}</span>
+              {/* <span className="text-[10px] text-gray-500">
+                {getRelativeTime(currentVersion.created_at)}
+              </span> */}
               {isLatestVersion ? (
                 <span className="text-[10px] text-green-600 px-2 py-1 rounded-full bg-green-50 border border-green-100">
                   Latest
@@ -123,7 +146,12 @@ export default function VersionSwitcher({
                       }`}
                     >
                       <GitBranch className="h-4 w-4 text-gray-500" />
-                      <span className="flex-1 text-xs">v{version.version}</span>
+                      <div className="flex-1 flex items-center gap-2">
+                        <span className="text-xs">v{version.version}</span>
+                        <span className="text-[10px] text-gray-500">
+                          {getRelativeTime(version.created_at)}
+                        </span>
+                      </div>
                       {isLatest && (
                         <span className="text-[8px] text-green-600 px-1.5 py-0.5 rounded-full bg-green-50 border border-green-100">
                           Latest

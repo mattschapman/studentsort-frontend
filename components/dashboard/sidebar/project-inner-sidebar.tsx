@@ -113,8 +113,8 @@ const innerNavigationItems: Record<string, SectionData> = {
         label: "TIMETABLE",
         items: [
           {
-            label: "Auto-scheduling",
-            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/settings/auto-scheduling`
+            label: "Autoscheduling",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/settings/autoscheduling`
           },
           {
             label: "Constraints",

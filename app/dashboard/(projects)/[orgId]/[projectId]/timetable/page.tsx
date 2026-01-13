@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { ArrowUpRight, Loader2, StopCircle } from "lucide-react";
+import { ArrowUpRight, Loader2, Square } from "lucide-react";
 import { toast } from "sonner";
 import {
   ResizableHandle,
@@ -28,6 +28,31 @@ import { Button } from "@/components/ui/button";
 import { TimetableProgressPopover } from "./_components/progress-popover";
 import { StartAutoSchedulingDialog } from "./_components/start-auto-scheduling-dialog";
 import { cancelAutoSchedulingJob } from "./_actions/cancel-autoscheduling-job";
+
+// Define stage type
+type Stage = 
+  | "initialising" 
+  | "constructing_blocks" 
+  | "scheduling_lessons" 
+  | "finding_teachers" 
+  | "checking_everything";
+
+// Define stage messages and their order
+const STAGE_MESSAGES: Record<Stage, string> = {
+  initialising: "Initialising",
+  constructing_blocks: "Constructing blocks",
+  scheduling_lessons: "Scheduling lessons",
+  finding_teachers: "Finding teachers",
+  checking_everything: "Checking everything",
+};
+
+const STAGE_ORDER: Stage[] = [
+  "initialising",
+  "constructing_blocks",
+  "scheduling_lessons",
+  "finding_teachers",
+  "checking_everything",
+];
 
 export default function TimetablePage() {
   const params = useParams();
@@ -54,7 +79,7 @@ export default function TimetablePage() {
   // Auto-scheduling job state
   const [activeJobTaskId, setActiveJobTaskId] = useState<string | null>(null);
   const [activeJobVersionId, setActiveJobVersionId] = useState<string | null>(null);
-  const [jobProgress, setJobProgress] = useState<{ current: number; total: number } | null>(null);
+  const [currentStage, setCurrentStage] = useState<Stage | null>(null);
   const supabaseRef = useRef(createClient());
 
   // Grid view options state
@@ -79,7 +104,7 @@ export default function TimetablePage() {
   const handleJobStarted = (taskId: string, newVersionId: string) => {
     setActiveJobTaskId(taskId);
     setActiveJobVersionId(newVersionId);
-    setJobProgress({ current: 0, total: 100 });
+    setCurrentStage("initialising");
   };
 
   // Realtime subscription for job updates
@@ -103,17 +128,16 @@ export default function TimetablePage() {
           
           console.log('Job update received:', job);
           
-          // Update progress
-          setJobProgress({
-            current: job.progress || 0,
-            total: job.total || 100,
-          });
+          // Update stage if present
+          if (job.stage) {
+            setCurrentStage(job.stage as Stage);
+          }
 
           // Handle status changes
           if (job.status === 'completed') {
             setActiveJobTaskId(null);
             setActiveJobVersionId(null);
-            setJobProgress(null);
+            setCurrentStage(null);
 
             toast.success("Auto-scheduling completed!");
             
@@ -124,13 +148,13 @@ export default function TimetablePage() {
           } else if (job.status === 'failed') {
             setActiveJobTaskId(null);
             setActiveJobVersionId(null);
-            setJobProgress(null);
+            setCurrentStage(null);
 
             toast.error(job.error || "Auto-scheduling failed");
           } else if (job.status === 'cancelled') {
             setActiveJobTaskId(null);
             setActiveJobVersionId(null);
-            setJobProgress(null);
+            setCurrentStage(null);
 
             toast.info("Auto-scheduling cancelled");
           }
@@ -148,7 +172,7 @@ export default function TimetablePage() {
           // Job was deleted (cancelled)
           setActiveJobTaskId(null);
           setActiveJobVersionId(null);
-          setJobProgress(null);
+          setCurrentStage(null);
           
           toast.info("Auto-scheduling cancelled");
         }
@@ -425,17 +449,12 @@ export default function TimetablePage() {
                       className="text-xs"
                       onClick={handleStopJob}
                     >
-                      <StopCircle className="size-3" />
+                      <Square className="size-3 fill-white" />
                       Stop
                     </Button>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Loader2 className="h-3 w-3 animate-spin" />
                       Auto-scheduling in progress...
-                      {jobProgress && (
-                        <span className="font-medium">
-                          {jobProgress.current}%
-                        </span>
-                      )}
                     </div>
                   </div>
                 ) : (
@@ -464,17 +483,35 @@ export default function TimetablePage() {
               {/* All Grids - Resizable/scrollable */}
               <div className="flex-1 overflow-hidden relative">
                 {isJobRunning && (
-                  <div className="absolute inset-0 bg-white/80 z-10 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-white z-50 flex items-center justify-center">
                     <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                      <Loader2 className="h-8 w-8 animate-spin" />
                       <div className="text-sm font-medium">
                         Building timetable...
                       </div>
-                      {jobProgress && (
-                        <div className="text-xs text-muted-foreground">
-                          {jobProgress.current}% complete
+                      <div className="overflow-hidden h-5">
+                        <div
+                          className="transition-transform duration-300 ease-in-out"
+                          style={{
+                            transform: `translateY(-${
+                              currentStage 
+                                ? STAGE_ORDER.indexOf(currentStage) * 1.25
+                                : 0
+                            }rem)`,
+                          }}
+                        >
+                          {STAGE_ORDER.map((stage, i) => (
+                            <div
+                              key={i}
+                              className="h-5 flex items-center justify-center"
+                            >
+                              <p className="text-muted-foreground text-xs">
+                                {STAGE_MESSAGES[stage]}
+                              </p>
+                            </div>
+                          ))}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 )}
