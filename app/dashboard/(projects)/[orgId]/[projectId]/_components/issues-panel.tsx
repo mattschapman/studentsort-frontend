@@ -53,7 +53,7 @@ export default function IssuesPanel() {
   // Clear hash when panel closes
   useEffect(() => {
     if (!isIssuesOpen && window.location.hash.startsWith('#issue-')) {
-      history.pushState('', document.title, window.location.pathname + window.location.search);
+      history.pushState({}, '', window.location.pathname + window.location.search);
     }
   }, [isIssuesOpen]);
 
@@ -98,7 +98,7 @@ export default function IssuesPanel() {
     setSelectedIssue(null); // Reset selection when switching tabs
     // Clear hash when switching tabs
     if (window.location.hash) {
-      history.pushState('', document.title, window.location.pathname + window.location.search);
+      history.pushState({}, '', window.location.pathname + window.location.search);
     }
   };
 
@@ -119,14 +119,14 @@ export default function IssuesPanel() {
     setSelectedIssue(null);
     // Clear hash
     if (window.location.hash) {
-      history.pushState('', document.title, window.location.pathname + window.location.search);
+      history.pushState({}, '', window.location.pathname + window.location.search);
     }
   };
 
   const handleClose = () => {
     // Clear hash before closing
     if (window.location.hash.startsWith('#issue-')) {
-      history.pushState('', document.title, window.location.pathname + window.location.search);
+      history.pushState({}, '', window.location.pathname + window.location.search);
     }
     closePanel();
   };

@@ -72,7 +72,7 @@ export default function DashboardHeader({
   const handleToggleIssues = () => {
     // Clear hash if panel is currently open (about to close)
     if (isIssuesOpen && window.location.hash.startsWith('#issue-')) {
-      history.pushState('', document.title, window.location.pathname + window.location.search);
+      history.pushState({}, '', window.location.pathname + window.location.search);
     }
     toggleIssues();
   };

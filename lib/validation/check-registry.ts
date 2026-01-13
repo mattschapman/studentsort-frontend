@@ -4,6 +4,9 @@ import type { CheckDefinition } from './types';
 import { checkTeachingHoursAvailability } from './checks/teaching-hours-availability';
 import { checkConcurrentTeachersCapacity } from './checks/concurrent-teachers-capacity';
 import { checkFormGroupPeriodCoverage } from './checks/form-group-period-coverage';
+import { checkClassSpacingFeasibility } from './checks/class-spacing-feasibility';
+import { checkConsecutivePeriodAvailability } from './checks/consecutive-period-availability';
+import { checkTeacherDailyLoadDistribution } from './checks/teacher-daily-load-distribution';
 
 /**
  * Central registry of all validation checks.
@@ -53,18 +56,40 @@ export const CHECK_REGISTRY: CheckDefinition[] = [
     },
     check: checkFormGroupPeriodCoverage,
   },
-  // Future checks can be added here
-  // {
-  //   id: 'room-capacity',
-  //   name: 'Room Capacity',
-  //   description: 'Validates that rooms have sufficient capacity',
-  //   category: 'scheduling',
-  //   prerequisites: {
-  //     requiresBlocks: true,
-  //     // requiresRooms: true,
-  //   },
-  //   check: checkRoomCapacity,
-  // },
+  {
+    id: 'class-spacing-feasibility',
+    name: 'Class Spacing Feasibility',
+    description: 'Validates that classes have enough days to space lessons (max one lesson per day)',
+    category: 'model',
+    prerequisites: {
+      requiresBlocks: true,
+      requiresCycle: true,
+    },
+    check: checkClassSpacingFeasibility,
+  },
+  {
+    id: 'consecutive-period-availability',
+    name: 'Consecutive Period Availability',
+    description: 'Validates that the cycle has sufficient consecutive periods for double/triple lessons',
+    category: 'model',
+    prerequisites: {
+      requiresBlocks: true,
+      requiresCycle: true,
+    },
+    check: checkConsecutivePeriodAvailability,
+  },
+  {
+    id: 'teacher-daily-load-distribution',
+    name: 'Teacher Daily Load Distribution',
+    description: 'Validates that teachers can distribute their assigned lessons within daily limits',
+    category: 'staffing',
+    prerequisites: {
+      requiresBlocks: true,
+      requiresTeachers: true,
+      requiresCycle: true,
+    },
+    check: checkTeacherDailyLoadDistribution,
+  },
 ];
 
 /**
