@@ -572,6 +572,16 @@
       "classSplitting": 50,
       "balanceWorkload": 50
     },
-    "classSplitPriorities": {}
+    "classSplitPriorities": {},
+    "autoSchedulingConfig": {
+      "stages": {
+        "blocking": true,
+        "scheduling": true,
+        "staffing": true
+      },
+      "filters": [],
+      "maxTimeSeconds": 60,
+      "timestamp": "2026-01-13T09:14:55.216Z"
+    }
   }
 }

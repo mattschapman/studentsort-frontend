@@ -13,12 +13,18 @@ interface SubmitJobParams {
   userId: string;
   versionData: any;
   maxTimeSeconds: number;
+  useDummySolver?: boolean; // Optional flag to use dummy solver for testing
 }
 
 export async function submitAutoSchedulingJob(params: SubmitJobParams) {
   try {
-    // First, submit to FastAPI to get the task_id
-    const response = await fetch(`${FASTAPI_URL}/api/v1/solve/dummy`, {
+    // Determine which endpoint to use
+    const endpoint = params.useDummySolver
+      ? `${FASTAPI_URL}/api/v1/solve/dummy`
+      : `${FASTAPI_URL}/api/v1/solve`;
+
+    // Submit to FastAPI to get the task_id
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

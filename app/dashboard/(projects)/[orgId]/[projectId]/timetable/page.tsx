@@ -196,6 +196,55 @@ export default function TimetablePage() {
     // Note: The realtime subscription will handle cleanup when the record is deleted
   };
 
+  // Handle clear all assignments
+  const handleClearAllAssignments = () => {
+    if (!versionData) return;
+
+    let clearedPeriods = 0;
+    let clearedTeachers = 0;
+
+    // Clear all meta period schedules
+    for (const block of versionData.model.blocks) {
+      for (const metaLesson of block.meta_lessons) {
+        for (const metaPeriod of metaLesson.meta_periods) {
+          if (metaPeriod.start_period_id) {
+            updateMetaPeriodSchedule(
+              block.id,
+              metaLesson.id,
+              metaPeriod.id,
+              ""
+            );
+            clearedPeriods++;
+          }
+        }
+      }
+    }
+
+    // Clear all teacher assignments
+    for (const block of versionData.model.blocks) {
+      for (const teachingGroup of block.teaching_groups) {
+        for (const classItem of teachingGroup.classes) {
+          for (const lesson of classItem.lessons) {
+            if (lesson.teacher_id) {
+              updateLessonTeacher(
+                block.id,
+                teachingGroup.number,
+                classItem.id,
+                lesson.id,
+                ""
+              );
+              clearedTeachers++;
+            }
+          }
+        }
+      }
+    }
+
+    toast.success(
+      `Cleared ${clearedPeriods} period assignment${clearedPeriods !== 1 ? 's' : ''} and ${clearedTeachers} teacher assignment${clearedTeachers !== 1 ? 's' : ''}`
+    );
+  };
+
   // Parse all periods
   const allPeriods = useMemo(() => {
     if (!versionData) return [];
@@ -474,6 +523,7 @@ export default function TimetablePage() {
                       <TimetableViewOptionsPopover
                         options={gridViewOptions}
                         onOptionsChange={setGridViewOptions}
+                        onClearAllAssignments={handleClearAllAssignments}
                       />
                     </div>
                   </>

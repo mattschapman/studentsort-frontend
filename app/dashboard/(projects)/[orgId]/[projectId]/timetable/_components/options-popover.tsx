@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Eye, Filter, Type, Palette, Users, SwatchBook, EyeOff } from "lucide-react";
+import { Eye, Filter, Type, Palette, Users, Trash2, Replace } from "lucide-react";
 
 export type TeacherFilterOption = "all" | "eligible" | "assigned";
 
@@ -50,11 +50,13 @@ export interface TimetableViewOptions {
 interface TimetableViewOptionsPopoverProps {
   options: TimetableViewOptions;
   onOptionsChange: (options: TimetableViewOptions) => void;
+  onClearAllAssignments: () => void;
 }
 
 export function TimetableViewOptionsPopover({
   options,
   onOptionsChange,
+  onClearAllAssignments,
 }: TimetableViewOptionsPopoverProps) {
   const handleChange = (key: keyof TimetableViewOptions, value: any) => {
     onOptionsChange({ ...options, [key]: value });
@@ -80,7 +82,7 @@ export function TimetableViewOptionsPopover({
       <PopoverContent className="w-82 p-0" align="end">
         <div className="grid">
           <div className="space-y-2 p-4 border-b">
-            <h4 className="leading-none font-medium text-sm">Display Options</h4>
+            <h4 className="leading-none font-medium text-sm">Options</h4>
           </div>
           <div className="grid">
             {/* Form Groups Options */}
@@ -290,6 +292,28 @@ export function TimetableViewOptionsPopover({
                     </Label>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Data Section */}
+            <div className="space-y-3 p-4 border-t">
+              <h5 className="text-xs font-semibold text-stone-700">Danger Zone</h5>
+              <div className="grid grid-cols-2 items-center gap-4 h-7">
+                <Label
+                  htmlFor="show-block-titles"
+                  className="col-span-1 text-xs flex items-center gap-2"
+                >
+                  <Replace className="w-3 h-3" />
+                  Assignments
+                </Label>
+                <Button
+                  variant="destructive"
+                  size="xs"
+                  className="w-fit text-xs"
+                  onClick={onClearAllAssignments}
+                >
+                  Clear all
+                </Button>
               </div>
             </div>
           </div>
