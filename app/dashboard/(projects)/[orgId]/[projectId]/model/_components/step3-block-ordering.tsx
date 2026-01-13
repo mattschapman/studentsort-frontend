@@ -17,6 +17,7 @@ import {
 import type { BlockFormData } from "./types";
 import type { Subject } from "@/lib/contexts/version-data-context";
 import { getTailwindColorValue, generateId } from "./utils";
+import { optimizeLessonAssignments } from "../_actions/block-ordering-optimizer";
 
 interface Step3BlockOrderingProps {
   formData: BlockFormData;
@@ -207,6 +208,17 @@ export function Step3BlockOrdering({
     setOpenPopovers(prev => ({ ...prev, [popoverKey]: false }));
   };
 
+  // Handle optimize button
+  const handleOptimize = () => {
+    const optimizedMappings = optimizeLessonAssignments(allLessons, metaLessons);
+    onChange({ lessonMappings: optimizedMappings });
+  };
+
+  // Handle clear button
+  const handleClear = () => {
+    onChange({ lessonMappings: {} });
+  };
+
   // Get all unassigned lessons
   const allUnassignedLessons = allLessons.filter(l => !formData.lessonMappings[l.id]);
 
@@ -220,6 +232,26 @@ export function Step3BlockOrdering({
         <p className="text-sm text-muted-foreground">
           Assign lessons to meta lesson slots. Click on a cell to select which lesson appears there.
         </p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button
+          onClick={handleOptimize}
+          variant="default"
+          size="sm"
+        >
+          Optimize
+        </Button>
+        <Button
+          onClick={handleClear}
+          variant="outline"
+          size="sm"
+        >
+          Clear
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          Optimize spreads lessons to minimize concurrent subjects per period
+        </span>
       </div>
 
       {allUnassignedLessons.length > 0 && (
