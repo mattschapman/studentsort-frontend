@@ -126,7 +126,7 @@ export function SummaryAvailabilityGrid({
           <thead className="bg-white">
             <tr>
               <th className="sticky left-0 z-10 bg-stone-50 border-b border-r px-4 py-2 text-left text-xs font-semibold min-w-36">
-                Summary
+                Scheduling
               </th>
               <th className="sticky left-36 z-10 bg-stone-50 border-b border-r px-4 py-2 text-center text-xs font-semibold min-w-20">
                 Occupied
@@ -153,7 +153,7 @@ export function SummaryAvailabilityGrid({
           <tbody>
             <tr>
               <td className="sticky left-0 z-10 bg-white border-r px-4 py-2 text-xs font-medium">
-                Bands + Teachers
+                Bands/staff availability
               </td>
 
               {/* Occupied column */}

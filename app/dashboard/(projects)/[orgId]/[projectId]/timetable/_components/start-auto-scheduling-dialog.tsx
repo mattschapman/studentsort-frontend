@@ -1,7 +1,10 @@
+// app/dashboard/(projects)/[orgId]/[projectId]/timetable/_components/start-auto-scheduling-dialog.tsx
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -24,14 +27,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ListFilter, ChevronDown, Plus, Trash2, MoreHorizontal, ExternalLink, X } from "lucide-react";
+import { createPlaceholderVersion } from "../_actions/create-placeholder-version";
+import { submitAutoSchedulingJob } from "../_actions/submit-autoscheduling-job";
 
 interface StartAutoSchedulingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  versionData: any; // Type from your context
+  versionData: any;
   orgId: string;
   projectId: string;
   versionId: string;
+  onJobStarted: (taskId: string, newVersionId: string) => void;
 }
 
 interface FilterConfig {
@@ -54,7 +60,11 @@ export function StartAutoSchedulingDialog({
   orgId,
   projectId,
   versionId,
+  onJobStarted,
 }: StartAutoSchedulingDialogProps) {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [stages, setStages] = useState<AutoSchedulingStages>({
     blocking: true,
     scheduling: true,
@@ -64,7 +74,8 @@ export function StartAutoSchedulingDialog({
   const [activeFilters, setActiveFilters] = useState<FilterConfig[]>([]);
   const [filterSearchTerms, setFilterSearchTerms] = useState<Record<string, string>>({});
 
-  // Extract available year groups and subjects from version data
+  // [Rest of the existing useMemo hooks for availableYearGroups, availableSubjects, overallStats, scopeStats remain the same...]
+
   const availableYearGroups = useMemo(() => {
     if (!versionData) return [];
     const yearGroups = new Set<string>();
@@ -96,7 +107,6 @@ export function StartAutoSchedulingDialog({
       .sort((a, b) => a.title.localeCompare(b.title));
   }, [versionData]);
 
-  // Calculate overall lesson statistics
   const overallStats = useMemo(() => {
     if (!versionData) return { total: 0, blocked: 0, scheduled: 0, staffed: 0 };
 
@@ -110,14 +120,12 @@ export function StartAutoSchedulingDialog({
           cls.lessons?.forEach((lesson: any) => {
             total++;
 
-            // Check if lesson is scheduled
             const metaLesson = block.meta_lessons?.find((ml: any) =>
               ml.meta_periods?.[0]?.id === lesson.meta_period_id
             );
             const isScheduled = metaLesson?.meta_periods?.[0]?.start_period_id;
             if (isScheduled) scheduled++;
 
-            // Check if lesson is staffed
             const isStaffed = !!lesson.teacher_id;
             if (isStaffed) staffed++;
           });
@@ -125,13 +133,10 @@ export function StartAutoSchedulingDialog({
       });
     });
 
-    // All lessons are "blocked" since they're already assigned to blocks
     const blocked = total;
-
     return { total, blocked, scheduled, staffed };
   }, [versionData]);
 
-  // Calculate lesson scope with filters
   const scopeStats = useMemo(() => {
     if (!versionData) return {
       blocking: { unblocked: 0, unblockedInScope: 0 },
@@ -150,7 +155,6 @@ export function StartAutoSchedulingDialog({
       block.teaching_groups?.forEach((tg: any) => {
         tg.classes?.forEach((cls: any) => {
           cls.lessons?.forEach((lesson: any) => {
-            // Check if lesson matches filters
             const yearGroupMatch = activeFilters
               .filter(f => f.field === 'year-group')
               .every(filter => {
@@ -168,17 +172,12 @@ export function StartAutoSchedulingDialog({
 
             const matchesFilters = activeFilters.length === 0 || (yearGroupMatch && subjectMatch);
 
-            // Check if lesson is scheduled
             const metaLesson = block.meta_lessons?.find((ml: any) =>
               ml.meta_periods?.[0]?.id === lesson.meta_period_id
             );
             const isScheduled = metaLesson?.meta_periods?.[0]?.start_period_id;
-            
-            // Check if lesson is staffed
             const isStaffed = !!lesson.teacher_id;
 
-            // All lessons are blocked (in a block), so unblocked = 0
-            // But we count unscheduled and unstaffed
             if (!isScheduled) {
               unscheduled++;
               if (matchesFilters) unscheduledInScope++;
@@ -200,12 +199,10 @@ export function StartAutoSchedulingDialog({
     };
   }, [versionData, activeFilters]);
 
-  // Handle stage checkbox changes with dependencies
   const handleStageChange = (stage: keyof AutoSchedulingStages, checked: boolean) => {
     setStages(prev => {
       const newStages = { ...prev, [stage]: checked };
 
-      // Apply dependency rules
       if (stage === 'staffing' && checked) {
         newStages.scheduling = true;
         newStages.blocking = true;
@@ -213,7 +210,6 @@ export function StartAutoSchedulingDialog({
         newStages.blocking = true;
       }
 
-      // Reverse dependencies
       if (stage === 'blocking' && !checked) {
         newStages.scheduling = false;
         newStages.staffing = false;
@@ -283,6 +279,79 @@ export function StartAutoSchedulingDialog({
     return selectedOptions.map(opt => opt.title).join(', ');
   };
 
+  const handleStartAutoScheduling = async () => {
+    if (!versionData) return;
+    
+    setIsSubmitting(true);
+    const loadingToast = toast.loading("Starting auto-scheduling...");
+
+    try {
+      // Step 1: Get current user ID from metadata
+      const userId = versionData.metadata.created_by;
+
+      // Step 2: Create placeholder version
+      const placeholderResult = await createPlaceholderVersion(orgId, projectId, userId);
+      
+      if (!placeholderResult.success || !placeholderResult.versionId || !placeholderResult.fileId) {
+        throw new Error(placeholderResult.error || "Failed to create placeholder version");
+      }
+
+      const newVersionId = placeholderResult.versionId;
+      const fileId = placeholderResult.fileId;
+      const versionNumber = placeholderResult.versionNumber!;
+
+      // Step 3: Prepare version data with autoSchedulingConfig
+      const versionDataWithConfig = {
+        ...versionData,
+        metadata: {
+          ...versionData.metadata,
+          version_id: newVersionId,
+          version_number: versionNumber,
+          created_at: new Date().toISOString(),
+          created_by: userId,
+        },
+        settings: {
+          ...versionData.settings,
+          autoSchedulingConfig: {
+            stages,
+            filters: activeFilters,
+            maxTimeSeconds,
+            timestamp: new Date().toISOString(),
+          },
+        },
+      };
+
+      // Step 4: Submit job to FastAPI
+      const jobResult = await submitAutoSchedulingJob({
+        versionId: newVersionId,
+        fileId: fileId,
+        orgId,
+        projectId,
+        userId,
+        versionData: versionDataWithConfig,
+        maxTimeSeconds,
+      });
+
+      if (!jobResult.success) {
+        throw new Error(jobResult.error);
+      }
+
+      toast.dismiss(loadingToast);
+      toast.success("Auto-scheduling started!");
+
+      // Step 5: Close dialog and notify parent
+      onOpenChange(false);
+      onJobStarted(jobResult.taskId!, newVersionId);
+
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
+      toast.error(error.message || "Failed to start auto-scheduling");
+      console.error("Auto-scheduling error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const renderFilterButton = (filter: FilterConfig) => {
     const options = getFieldOptions(filter.field);
     const searchTerm = filterSearchTerms[filter.id] || '';
@@ -307,7 +376,7 @@ export function StartAutoSchedulingDialog({
             <ListFilter className="size-3" />
             {getFieldDisplayName(filter.field)}
             {isActive && displayText && (
-              <span className="max-w-[200px] truncate">: {displayText}</span>
+              <span className="max-w-50 truncate -ml-1.5">: {displayText}</span>
             )}
             <ChevronDown className="h-3 w-3" />
           </Button>
@@ -442,10 +511,7 @@ export function StartAutoSchedulingDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Start Auto-Scheduling</DialogTitle>
-          <DialogDescription>
-            Configure the scope and parameters of the autoscheduling algorithm
-          </DialogDescription>
+          <DialogTitle>Configure Auto-Scheduling</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-2">
@@ -453,10 +519,6 @@ export function StartAutoSchedulingDialog({
           <div className="space-y-3">
             <div className="space-y-1">
               <Label className="text-sm font-medium">Lesson filters (optional)</Label>
-              {/* <span className="text-xs text-muted-foreground">If you'd like to target a specific group of lessons, add filters below.</span> */}
-              <p className="text-xs text-muted-foreground">
-                Filter which lessons should be included in the auto-scheduling process. Already scheduled/staffed lessons will remain fixed.
-              </p>
             </div>
             <div className="flex gap-2 flex-wrap items-center">
               {activeFilters.map(filter => renderFilterButton(filter))}
@@ -556,7 +618,6 @@ export function StartAutoSchedulingDialog({
               max={3600}
               value={maxTimeSeconds}
               onChange={(e) => setMaxTimeSeconds(parseInt(e.target.value) || 60)}
-              className=""
             />
             <p className="text-xs text-muted-foreground">
               The solver will run for up to this many seconds before returning the best solution found.
@@ -566,35 +627,29 @@ export function StartAutoSchedulingDialog({
           {/* Constraints Link */}
           <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
             <p className="text-xs text-blue-900">
-              The solver will respect all constraints configured in your settings.{" "}
+              <span className="font-semibold">Note</span>: The solver will respect all constraints configured in your{" "}
               <Link
                 href={`/dashboard/${orgId}/${projectId}/settings/constraints?version=${versionId}`}
                 className="font-medium underline inline-flex items-center gap-1 hover:text-blue-700"
                 target="_blank"
               >
-                Edit constraints
+                settings
                 <ExternalLink className="h-3 w-3" />
               </Link>
+              .
             </p>
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button
-            onClick={() => {
-              // TODO: Implement solver trigger logic
-              console.log('Starting auto-scheduling with config:', {
-                stages,
-                maxTimeSeconds,
-                filters: activeFilters,
-                scopeStats,
-              });
-            }}
+            onClick={handleStartAutoScheduling}
+            disabled={isSubmitting}
           >
-            Start Auto-Scheduling
+            {isSubmitting ? "Starting..." : "Start Auto-Scheduling"}
           </Button>
         </DialogFooter>
       </DialogContent>
