@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ListFilter, ChevronDown, Plus, Trash2, MoreHorizontal, ExternalLink, X } from "lucide-react";
+import { ListFilter, ChevronDown, Plus, Trash2, MoreHorizontal, ExternalLink, X, AlertCircle } from "lucide-react";
 import { createPlaceholderVersion } from "../_actions/create-placeholder-version";
 import { submitAutoSchedulingJob } from "../_actions/submit-autoscheduling-job";
 
@@ -73,9 +73,9 @@ export function StartAutoSchedulingDialog({
   const [maxTimeSeconds, setMaxTimeSeconds] = useState<number>(60);
   const [activeFilters, setActiveFilters] = useState<FilterConfig[]>([]);
   const [filterSearchTerms, setFilterSearchTerms] = useState<Record<string, string>>({});
+  const [ignoreFixedAssignments, setIgnoreFixedAssignments] = useState<boolean>(false);
 
-  // [Rest of the existing useMemo hooks for availableYearGroups, availableSubjects, overallStats, scopeStats remain the same...]
-
+  // [All existing useMemo hooks remain the same...]
   const availableYearGroups = useMemo(() => {
     if (!versionData) return [];
     const yearGroups = new Set<string>();
@@ -199,6 +199,7 @@ export function StartAutoSchedulingDialog({
     };
   }, [versionData, activeFilters]);
 
+  // [All existing handler functions remain the same...]
   const handleStageChange = (stage: keyof AutoSchedulingStages, checked: boolean) => {
     setStages(prev => {
       const newStages = { ...prev, [stage]: checked };
@@ -316,6 +317,7 @@ export function StartAutoSchedulingDialog({
             stages,
             filters: activeFilters,
             maxTimeSeconds,
+            ignoreFixedAssignments,  // NEW: Include this flag
             timestamp: new Date().toISOString(),
           },
         },
@@ -330,6 +332,7 @@ export function StartAutoSchedulingDialog({
         userId,
         versionData: versionDataWithConfig,
         maxTimeSeconds,
+        ignoreFixedAssignments,  // NEW: Pass to server action
       });
 
       if (!jobResult.success) {
@@ -622,6 +625,30 @@ export function StartAutoSchedulingDialog({
             <p className="text-xs text-muted-foreground">
               The solver will run for up to this many seconds before returning the best solution found.
             </p>
+          </div>
+
+          {/* NEW: Ignore Fixed Assignments Option */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Advanced options</Label>
+            <div className="flex items-start space-x-2 rounded-md border border-amber-200 bg-amber-50 p-3">
+              <Checkbox
+                id="ignoreFixed"
+                checked={ignoreFixedAssignments}
+                onCheckedChange={(checked) => setIgnoreFixedAssignments(checked as boolean)}
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <label
+                  htmlFor="ignoreFixed"
+                  className="text-sm font-medium cursor-pointer flex items-center gap-2"
+                >
+                  Ignore existing fixed assignments
+                </label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  When enabled, the solver will ignore any pre-assigned lessons, teachers, or time slots and create a completely fresh schedule. Use this if you want to start from scratch.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Constraints Link */}

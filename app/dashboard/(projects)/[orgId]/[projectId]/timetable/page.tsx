@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { ArrowUpRight, Loader2, Square } from "lucide-react";
+import { ArrowUpRight, Loader2, Square, FlaskConical } from "lucide-react";
 import { toast } from "sonner";
 import {
   ResizableHandle,
@@ -28,6 +28,8 @@ import { Button } from "@/components/ui/button";
 import { TimetableProgressPopover } from "./_components/progress-popover";
 import { StartAutoSchedulingDialog } from "./_components/start-auto-scheduling-dialog";
 import { cancelAutoSchedulingJob } from "./_actions/cancel-autoscheduling-job";
+import { runDiagnostics } from "./_actions/run-diagnostics";
+import { DiagnosticsResultsDialog } from "./_components/diagnostics-results-dialog";
 
 // Define stage type
 type Stage = 
@@ -81,6 +83,12 @@ export default function TimetablePage() {
   const [activeJobVersionId, setActiveJobVersionId] = useState<string | null>(null);
   const [currentStage, setCurrentStage] = useState<Stage | null>(null);
   const supabaseRef = useRef(createClient());
+
+  // Diagnostics state
+  const [isDiagnosticsRunning, setIsDiagnosticsRunning] = useState(false);
+  const [diagnosticsTaskId, setDiagnosticsTaskId] = useState<string | null>(null);
+  const [diagnosticsReport, setDiagnosticsReport] = useState<any>(null);
+  const [isResultsDialogOpen, setIsResultsDialogOpen] = useState(false);
 
   // Grid view options state
   const [gridViewOptions, setGridViewOptions] = useState<TimetableViewOptions>({
@@ -195,6 +203,121 @@ export default function TimetablePage() {
     }
     // Note: The realtime subscription will handle cleanup when the record is deleted
   };
+
+  // Handle diagnostics
+  const handleRunDiagnostics = async () => {
+    if (!versionData) return;
+
+    setIsDiagnosticsRunning(true);
+    setDiagnosticsReport(null);
+
+    try {
+      // Get user from Supabase
+      const supabase = supabaseRef.current;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast.error("User not authenticated");
+        setIsDiagnosticsRunning(false);
+        return;
+      }
+
+      const result = await runDiagnostics({
+        versionId,
+        orgId,
+        projectId,
+        userId: user.id,
+        versionData,
+        maxTimeSeconds: 30.0,
+      });
+
+      if (!result.success) {
+        toast.error(result.error || "Failed to start diagnostics");
+        setIsDiagnosticsRunning(false);
+        return;
+      }
+
+      setDiagnosticsTaskId(result.taskId || null);
+      toast.info("Running feasibility diagnostics...");
+    } catch (error) {
+      console.error("Error running diagnostics:", error);
+      toast.error("Failed to start diagnostics");
+      setIsDiagnosticsRunning(false);
+    }
+  };
+
+  const fetchDiagnosticsResult = async (taskId: string) => {
+    try {
+      const fastApiUrl = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
+      const response = await fetch(`${fastApiUrl}/api/v1/solve/${taskId}/status`);
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch diagnostics result");
+      }
+
+      const data = await response.json();
+      
+      if (data.result && data.result.diagnostics) {
+        setDiagnosticsReport(data.result.diagnostics);
+        setIsResultsDialogOpen(true);
+      }
+    } catch (error) {
+      console.error("Error fetching diagnostics result:", error);
+      toast.error("Failed to load diagnostics results");
+    }
+  };
+
+  // Realtime subscription for diagnostics updates
+  useEffect(() => {
+    if (!diagnosticsTaskId) return;
+
+    const supabase = supabaseRef.current;
+    
+    const channel = supabase
+      .channel(`diagnostics_job:${diagnosticsTaskId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'autoscheduling_jobs',
+          filter: `id=eq.${diagnosticsTaskId}`,
+        },
+        (payload: any) => {
+          const job = payload.new;
+          
+          console.log('Diagnostics update received:', job);
+
+          // Handle status changes
+          if (job.status === 'completed') {
+            setIsDiagnosticsRunning(false);
+            setDiagnosticsTaskId(null);
+
+            toast.success("Diagnostics completed!");
+            
+            // Fetch the result
+            fetchDiagnosticsResult(diagnosticsTaskId);
+          } else if (job.status === 'failed') {
+            setIsDiagnosticsRunning(false);
+            setDiagnosticsTaskId(null);
+
+            toast.error(job.error || "Diagnostics failed");
+          } else if (job.status === 'cancelled') {
+            setIsDiagnosticsRunning(false);
+            setDiagnosticsTaskId(null);
+
+            toast.info("Diagnostics cancelled");
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [diagnosticsTaskId]);
 
   // Handle clear all assignments
   const handleClearAllAssignments = () => {
@@ -517,6 +640,25 @@ export default function TimetablePage() {
                         Build
                         <ArrowUpRight className="size-3" />
                       </Button>
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        className="text-xs"
+                        onClick={handleRunDiagnostics}
+                        disabled={isDiagnosticsRunning}
+                      >
+                        {isDiagnosticsRunning ? (
+                          <>
+                            <Loader2 className="size-3 animate-spin" />
+                            Checking...
+                          </>
+                        ) : (
+                          <>
+                            <FlaskConical className="size-3" />
+                            Check Feasibility
+                          </>
+                        )}
+                      </Button>
                     </div>
                     <div className="flex items-center gap-2">
                       <TimetableProgressPopover blocks={versionData.model.blocks} />
@@ -532,6 +674,20 @@ export default function TimetablePage() {
 
               {/* All Grids - Resizable/scrollable */}
               <div className="flex-1 overflow-hidden relative">
+                {isDiagnosticsRunning && (
+                  <div className="absolute inset-0 bg-white z-50 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                      <div className="text-sm font-medium">
+                        Running feasibility diagnostics...
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Testing blocks, year groups, and subjects
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {isJobRunning && (
                   <div className="absolute inset-0 bg-white z-50 flex items-center justify-center">
                     <div className="flex flex-col items-center gap-3">
@@ -667,6 +823,13 @@ export default function TimetablePage() {
         projectId={projectId}
         versionId={versionId}
         onJobStarted={handleJobStarted}
+      />
+
+      {/* Diagnostics Results Dialog */}
+      <DiagnosticsResultsDialog
+        open={isResultsDialogOpen}
+        onOpenChange={setIsResultsDialogOpen}
+        report={diagnosticsReport}
       />
     </div>
   );

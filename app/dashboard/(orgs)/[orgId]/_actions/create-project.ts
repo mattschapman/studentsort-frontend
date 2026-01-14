@@ -129,8 +129,6 @@ export async function createProject(
       model: {
         blocks: []
       },
-      staffing: {},
-      timetable: {},
       settings: {
         hardConstraints: {
           studentConflictPrevention: true,
@@ -141,7 +139,7 @@ export async function createProject(
           targetCapacity: true,
           maximiseCoverFlexibility: true,
           doubleLessonRestrictedPeriods: [],
-          min_slt_available: 2,
+          min_slt_available: 0,
           max_periods_per_day_per_teacher: 4,
           max_teachers_per_class: 2
         },

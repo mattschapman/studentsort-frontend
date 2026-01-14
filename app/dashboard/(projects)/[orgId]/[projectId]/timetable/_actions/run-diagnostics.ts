@@ -1,45 +1,36 @@
-// app/dashboard/(projects)/[orgId]/[projectId]/_actions/submit-autoscheduling-job.ts
+// app/dashboard/(projects)/[orgId]/[projectId]/timetable/_actions/run-diagnostics.ts
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
 
 const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:8000";
 
-interface SubmitJobParams {
+interface RunDiagnosticsParams {
   versionId: string;
-  fileId: string;
   orgId: string;
   projectId: string;
   userId: string;
   versionData: any;
-  maxTimeSeconds: number;
-  ignoreFixedAssignments?: boolean; // NEW: Flag to ignore fixed assignments
-  useDummySolver?: boolean; // Optional flag to use dummy solver for testing
+  maxTimeSeconds?: number;
 }
 
-export async function submitAutoSchedulingJob(params: SubmitJobParams) {
+export async function runDiagnostics(params: RunDiagnosticsParams) {
   try {
-    // Determine which endpoint to use
-    const endpoint = params.useDummySolver
-      ? `${FASTAPI_URL}/api/v1/solve/dummy`
-      : `${FASTAPI_URL}/api/v1/solve`;
-
     // Submit to FastAPI to get the task_id
-    const response = await fetch(endpoint, {
+    const response = await fetch(`${FASTAPI_URL}/api/v1/diagnostics`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         version_id: params.versionId,
-        file_id: params.fileId,
+        file_id: "", // Not needed for diagnostics
         org_id: params.orgId,
         project_id: params.projectId,
         user_id: params.userId,
         schedule: params.versionData,
-        max_time_in_seconds: params.maxTimeSeconds,
-        ignore_fixed_assignments: params.ignoreFixedAssignments ?? false, // NEW: Pass the flag
-        upload_result: true,
+        max_time_in_seconds: params.maxTimeSeconds || 30.0,
+        upload_result: false, // Don't upload results for diagnostics
       }),
     });
 
@@ -61,13 +52,13 @@ export async function submitAutoSchedulingJob(params: SubmitJobParams) {
         org_id: params.orgId,
         project_id: params.projectId,
         status: "pending",
+        stage: "checking_everything",
         progress: 0,
-        total: 100,
         created_by: params.userId,
       });
 
     if (jobError) {
-      console.error("Failed to create job record:", jobError);
+      console.error("Failed to create diagnostics job record:", jobError);
       // Don't fail the whole operation if job tracking fails
     }
 
@@ -77,10 +68,10 @@ export async function submitAutoSchedulingJob(params: SubmitJobParams) {
       message: data.message,
     };
   } catch (error: any) {
-    console.error("Error submitting autoscheduling job:", error);
+    console.error("Error submitting diagnostics job:", error);
     return {
       success: false,
-      error: error.message || "Failed to submit job to FastAPI",
+      error: error.message || "Failed to submit diagnostics job to FastAPI",
     };
   }
 }

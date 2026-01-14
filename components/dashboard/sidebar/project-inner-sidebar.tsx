@@ -97,6 +97,20 @@ const innerNavigationItems: Record<string, SectionData> = {
       }
     ]
   },
+  staffing: {
+    title: "Staffing",
+    sections: [
+      {
+        label: "GENERAL",
+        items: [
+          {
+            label: "Requirements",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/staffing`
+          },
+        ]
+      },
+    ]
+  },
   settings: {
     title: "Project Settings",
     sections: [
@@ -106,6 +120,10 @@ const innerNavigationItems: Record<string, SectionData> = {
           {
             label: "General",
             href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/settings`
+          },
+          {
+            label: "Versions",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/settings/versions`
           }
         ]
       },
@@ -138,6 +156,7 @@ export default function ProjectInnerSidebar({ orgId, projectId }: ProjectInnerSi
     if (pathname.includes('/cycle')) return 'cycle'
     if (pathname.includes('/data')) return 'data'
     if (pathname.includes('/model')) return 'model'
+    if (pathname.includes('/staffing')) return 'staffing'
     if (pathname.includes('/settings')) return 'settings'
     return null
   }
