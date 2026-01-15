@@ -7,6 +7,7 @@ import { ChevronRight, ChevronDown } from "lucide-react";
 import type { FormGroupAvailability, Period } from "../_types/timetable.types";
 import { getScheduledPeriod } from "../_lib/compute-timetable-availability";
 import { getPeriodLabel } from "../_lib/period-label-utils";
+import { FormGroupsGridCellPopover } from "./form-groups-grid-cell-popover";
 
 interface FormGroupsGridProps {
   versionData: any;
@@ -25,6 +26,17 @@ interface BandGroup {
   bandTitle: string;
   yearGroup: number;
   formGroups: FormGroupAvailability[];
+}
+
+interface LessonDetail {
+  classTitle: string;
+  subjectName: string;
+  subjectAbbreviation: string;
+  teacherName: string;
+  teacherInitials: string;
+  teachingGroupTitle: string;
+  lessonId: string;
+  formGroupName?: string;
 }
 
 export function FormGroupsGrid({
@@ -122,6 +134,86 @@ export function FormGroupsGrid({
     return occupiedBlocks;
   };
 
+  // Helper function to get lesson details for a period across multiple form groups
+  const getLessonDetailsForBand = (
+    formGroups: FormGroupAvailability[],
+    periodId: string,
+    blockId: string,
+    metaLessonId: string
+  ): LessonDetail[] => {
+    const details: LessonDetail[] = [];
+
+    // Find the block
+    const block = versionData.model.blocks.find((b: any) => b.id === blockId);
+    if (!block) return details;
+
+    // Find the meta lesson
+    const metaLesson = block.meta_lessons.find((ml: any) => ml.id === metaLessonId);
+    if (!metaLesson) return details;
+
+    // Helper function to check if a period falls within a meta_period's range
+    const periodInMetaPeriod = (mp: any, targetPeriodId: string) => {
+      if (!mp.start_period_id) return false;
+      
+      const allPeriods = versionData.cycle.periods;
+      const startIdx = allPeriods.findIndex((p: any) => p.id === mp.start_period_id);
+      const targetIdx = allPeriods.findIndex((p: any) => p.id === targetPeriodId);
+      
+      if (startIdx === -1 || targetIdx === -1) return false;
+      
+      return targetIdx >= startIdx && targetIdx < startIdx + mp.length;
+    };
+
+    // Find all meta_periods that cover this period
+    const relevantMetaPeriods = metaLesson.meta_periods.filter((mp: any) =>
+      periodInMetaPeriod(mp, periodId)
+    );
+
+    if (relevantMetaPeriods.length === 0) return details;
+
+    const metaPeriodIds = new Set(relevantMetaPeriods.map((mp: any) => mp.id));
+
+    // Create a map of form group IDs to names for this band
+    const formGroupMap = new Map<string, string>();
+    formGroups.forEach(fg => {
+      formGroupMap.set(fg.formGroupId, fg.formGroupName);
+    });
+
+    // Iterate through teaching groups to find lessons
+    for (const teachingGroup of block.teaching_groups) {
+      for (const classItem of teachingGroup.classes) {
+        const lessons = classItem.lessons.filter(
+          (lesson: any) => metaPeriodIds.has(lesson.meta_period_id)
+        );
+
+        for (const lesson of lessons) {
+          // Get subject details
+          const subject = versionData.data.subjects.find(
+            (s: any) => s.id === classItem.subject
+          );
+
+          // Get teacher details
+          const teacher = versionData.data.teachers.find(
+            (t: any) => t.id === lesson.teacher_id
+          );
+
+          details.push({
+            classTitle: classItem.title || classItem.id,
+            subjectName: subject?.name || "Unknown Subject",
+            subjectAbbreviation: subject?.abbreviation || "?",
+            teacherName: teacher?.name || "Unassigned",
+            teacherInitials: teacher?.initials || "?",
+            teachingGroupTitle: teachingGroup.title || `Group ${teachingGroup.number}`,
+            lessonId: lesson.id || lesson.title || '',
+            formGroupName: undefined, // Band view doesn't show individual form groups
+          });
+        }
+      }
+    }
+
+    return details;
+  };
+
   // Calculate occupied lesson periods count for a band
   const getBandOccupiedLessonCount = (formGroups: FormGroupAvailability[]) => {
     const lessonPeriods = periods.filter(p => p.type === 'Lesson');
@@ -197,6 +289,16 @@ export function FormGroupsGrid({
             const borderClass = "border-b border-r";
             const ringClass = isSelectedMetaLessonHere ? "ring-2 ring-blue-500 ring-inset" : "";
 
+            // Get lesson details for this period and all form groups in the band
+            const lessonDetails = isOccupied 
+              ? getLessonDetailsForBand(
+                  band.formGroups,
+                  period.id,
+                  occupiedBlocks[0].blockId,
+                  occupiedBlocks[0].metaLessonId
+                )
+              : [];
+
             return (
               <td
                 key={period.id}
@@ -209,17 +311,23 @@ export function FormGroupsGrid({
                 )}
                 title={tooltipText}
               >
-                {isOccupied && (
-                  <div className="w-full h-full flex items-center justify-center py-1">
-                    {showBlockTitles ? (
-                      <span className="text-[0.5rem] font-medium truncate">
-                        {occupiedBlocks.map((b) => b.blockTitle).join(", ")}
-                      </span>
-                    ) : (
-                      <div className="w-1 h-1 bg-stone-700 rounded-full" />
-                    )}
-                  </div>
-                )}
+                <FormGroupsGridCellPopover
+                  blockTitle={occupiedBlocks[0]?.blockTitle || ""}
+                  lessons={lessonDetails}
+                  isOccupied={isOccupied}
+                >
+                  {isOccupied && (
+                    <div className="w-full h-full flex items-center justify-center py-1">
+                      {showBlockTitles ? (
+                        <span className="text-[0.5rem] font-medium truncate">
+                          {occupiedBlocks.map((b) => b.blockTitle).join(", ")}
+                        </span>
+                      ) : (
+                        <div className="w-1 h-1 bg-stone-700 rounded-full" />
+                      )}
+                    </div>
+                  )}
+                </FormGroupsGridCellPopover>
               </td>
             );
           })}
