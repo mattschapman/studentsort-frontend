@@ -33,11 +33,13 @@ import { submitAutoSchedulingJob } from "../_actions/submit-autoscheduling-job";
 interface StartAutoSchedulingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  versionData: any;
+  versionData: any; // Used for UI calculations only
   orgId: string;
   projectId: string;
   versionId: string;
+  versionNumber: number; // NEW: Display in dialog
   onJobStarted: (taskId: string, newVersionId: string) => void;
+  fetchSavedVersionJson: () => Promise<any>; // Function to fetch saved version
 }
 
 interface FilterConfig {
@@ -60,7 +62,9 @@ export function StartAutoSchedulingDialog({
   orgId,
   projectId,
   versionId,
+  versionNumber, // NEW
   onJobStarted,
+  fetchSavedVersionJson,
 }: StartAutoSchedulingDialogProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,7 +79,7 @@ export function StartAutoSchedulingDialog({
   const [filterSearchTerms, setFilterSearchTerms] = useState<Record<string, string>>({});
   const [ignoreFixedAssignments, setIgnoreFixedAssignments] = useState<boolean>(false);
 
-  // [All existing useMemo hooks remain the same...]
+  // [All existing useMemo hooks remain the same - these use versionData for UI only...]
   const availableYearGroups = useMemo(() => {
     if (!versionData) return [];
     const yearGroups = new Set<string>();
@@ -280,17 +284,19 @@ export function StartAutoSchedulingDialog({
     return selectedOptions.map(opt => opt.title).join(', ');
   };
 
+  // Fetches saved version JSON instead of using context
   const handleStartAutoScheduling = async () => {
-    if (!versionData) return;
-    
     setIsSubmitting(true);
     const loadingToast = toast.loading("Starting auto-scheduling...");
 
     try {
-      // Step 1: Get current user ID from metadata
-      const userId = versionData.metadata.created_by;
+      // Step 1: Fetch the saved version JSON (not from context)
+      const savedVersionData = await fetchSavedVersionJson();
+      
+      // Step 2: Get current user ID from metadata
+      const userId = savedVersionData.metadata.created_by;
 
-      // Step 2: Create placeholder version
+      // Step 3: Create placeholder version
       const placeholderResult = await createPlaceholderVersion(orgId, projectId, userId);
       
       if (!placeholderResult.success || !placeholderResult.versionId || !placeholderResult.fileId) {
@@ -301,38 +307,38 @@ export function StartAutoSchedulingDialog({
       const fileId = placeholderResult.fileId;
       const versionNumber = placeholderResult.versionNumber!;
 
-      // Step 3: Prepare version data with autoSchedulingConfig
+      // Step 4: Prepare version data with autoSchedulingConfig
       const versionDataWithConfig = {
-        ...versionData,
+        ...savedVersionData, // Use saved version, not context
         metadata: {
-          ...versionData.metadata,
+          ...savedVersionData.metadata,
           version_id: newVersionId,
           version_number: versionNumber,
           created_at: new Date().toISOString(),
           created_by: userId,
         },
         settings: {
-          ...versionData.settings,
+          ...savedVersionData.settings,
           autoSchedulingConfig: {
             stages,
             filters: activeFilters,
             maxTimeSeconds,
-            ignoreFixedAssignments,  // NEW: Include this flag
+            ignoreFixedAssignments,
             timestamp: new Date().toISOString(),
           },
         },
       };
 
-      // Step 4: Submit job to FastAPI
+      // Step 5: Submit job to FastAPI
       const jobResult = await submitAutoSchedulingJob({
         versionId: newVersionId,
         fileId: fileId,
         orgId,
         projectId,
         userId,
-        versionData: versionDataWithConfig,
+        versionData: versionDataWithConfig, // This now uses the saved version
         maxTimeSeconds,
-        ignoreFixedAssignments,  // NEW: Pass to server action
+        ignoreFixedAssignments,
       });
 
       if (!jobResult.success) {
@@ -342,7 +348,7 @@ export function StartAutoSchedulingDialog({
       toast.dismiss(loadingToast);
       toast.success("Auto-scheduling started!");
 
-      // Step 5: Close dialog and notify parent
+      // Step 6: Close dialog and notify parent
       onOpenChange(false);
       onJobStarted(jobResult.taskId!, newVersionId);
 
@@ -518,6 +524,22 @@ export function StartAutoSchedulingDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-2">
+          {/* NEW: Input Version Display */}
+          <div className="space-y-2">
+            <Label htmlFor="inputVersion" className="text-sm font-medium">
+              Input version
+            </Label>
+            <Input
+              id="inputVersion"
+              value={`Version ${versionNumber}`}
+              disabled
+              className="bg-muted"
+            />
+            <p className="text-xs text-muted-foreground">
+              This is the version that will be used as the starting point for auto-scheduling.
+            </p>
+          </div>
+
           {/* Lesson Scope Filters */}
           <div className="space-y-3">
             <div className="space-y-1">
@@ -627,7 +649,7 @@ export function StartAutoSchedulingDialog({
             </p>
           </div>
 
-          {/* NEW: Ignore Fixed Assignments Option */}
+          {/* Ignore Fixed Assignments Option */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Advanced options</Label>
             <div className="flex items-start space-x-2 rounded-md border border-amber-200 bg-amber-50 p-3">

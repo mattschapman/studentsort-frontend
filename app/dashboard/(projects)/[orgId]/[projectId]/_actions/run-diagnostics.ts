@@ -1,45 +1,34 @@
-// app/dashboard/(projects)/[orgId]/[projectId]/_actions/submit-autoscheduling-job.ts
+// app/dashboard/(projects)/[orgId]/[projectId]/_actions/run-diagnostics.ts
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
 
 const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:8000";
 
-interface SubmitJobParams {
+interface RunDiagnosticsParams {
   versionId: string;
-  fileId: string;
   orgId: string;
   projectId: string;
   userId: string;
   versionData: any;
   maxTimeSeconds: number;
-  ignoreFixedAssignments?: boolean;
-  useDummySolver?: boolean; // Optional flag to use dummy solver for testing
 }
 
-export async function submitAutoSchedulingJob(params: SubmitJobParams) {
+export async function runDiagnostics(params: RunDiagnosticsParams) {
   try {
-    // Determine which endpoint to use
-    const endpoint = params.useDummySolver
-      ? `${FASTAPI_URL}/api/v1/solve/dummy`
-      : `${FASTAPI_URL}/api/v1/solve`;
-
-    // Submit to FastAPI to get the task_id
-    const response = await fetch(endpoint, {
+    // Submit to FastAPI
+    const response = await fetch(`${FASTAPI_URL}/api/v1/diagnostics`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        version_id: params.versionId,
-        file_id: params.fileId,
         org_id: params.orgId,
         project_id: params.projectId,
+        source_version_id: params.versionId,
         user_id: params.userId,
         schedule: params.versionData,
         max_time_in_seconds: params.maxTimeSeconds,
-        ignore_fixed_assignments: params.ignoreFixedAssignments ?? false,
-        upload_result: true,
       }),
     });
 
@@ -67,20 +56,20 @@ export async function submitAutoSchedulingJob(params: SubmitJobParams) {
       });
 
     if (jobError) {
-      console.error("Failed to create job record:", jobError);
-      // Don't fail the whole operation if job tracking fails
+      console.error("Failed to create diagnostics job record:", jobError);
+      throw new Error("Failed to create job tracking record");
     }
 
     return {
       success: true,
       taskId: taskId,
-      message: data.message,
+      message: data.message || "Diagnostics job submitted successfully",
     };
   } catch (error: any) {
-    console.error("Error submitting autoscheduling job:", error);
+    console.error("Error submitting diagnostics job:", error);
     return {
       success: false,
-      error: error.message || "Failed to submit job to FastAPI",
+      error: error.message || "Failed to submit diagnostics job",
     };
   }
 }

@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useSearchParams, usePathname } from 'next/navigation';
 import { getVersionJson } from '@/app/dashboard/(projects)/[orgId]/[projectId]/_actions/get-version-json';
 import type { Block } from '@/app/dashboard/(projects)/[orgId]/[projectId]/model/_components/types';
+import type { AutoSchedulingStages, FilterConfig, SolverConfig } from '@/app/dashboard/(projects)/[orgId]/[projectId]/timetable/_components/autoscheduling-dialog/types';
 
 // Type definitions matching the JSON structure
 type Week = {
@@ -109,10 +110,19 @@ export type SoftConstraints = {
   dailyOverloadPenalty: number;
 };
 
+export type AutoSchedulingConfig = {
+  stages: AutoSchedulingStages;
+  filters: FilterConfig[];
+  ignoreFixedAssignments: boolean;
+  solver: SolverConfig;
+  timestamp: string;
+};
+
 export type Settings = {
   hardConstraints: HardConstraints;
   softConstraints: SoftConstraints;
   classSplitPriorities: Record<string, number>;
+  autoSchedulingConfig?: AutoSchedulingConfig;
 };
 
 type VersionJsonData = {
@@ -153,6 +163,7 @@ interface VersionDataContextValue {
   updateHardConstraints: (constraints: Partial<HardConstraints>) => void;
   updateSoftConstraints: (constraints: Partial<SoftConstraints>) => void;
   updateClassSplitPriorities: (priorities: Record<string, number>) => void;
+  updateAutoSchedulingConfig: (config: Partial<AutoSchedulingConfig>) => void;
   updateMetaPeriodSchedule: (blockId: string, metaLessonId: string, metaPeriodId: string, periodId: string | null) => void;
   updateLessonTeacher: (blockId: string, teachingGroupNumber: number, classId: string, lessonId: string, teacherId: string | null) => void;
   getVersionJsonString: () => string;
@@ -489,6 +500,30 @@ export function VersionDataProvider({ children }: VersionDataProviderProps) {
     });
   }, []);
 
+  const updateAutoSchedulingConfig = useCallback((config: Partial<AutoSchedulingConfig>) => {
+    setVersionData(prev => {
+      if (!prev) return null;
+      
+      return {
+        ...prev,
+        settings: {
+          ...prev.settings,
+          autoSchedulingConfig: {
+            ...(prev.settings.autoSchedulingConfig || {
+              stages: { blocking: true, scheduling: true, staffing: true },
+              filters: [],
+              ignoreFixedAssignments: false,
+              solver: { type: 'g1-base', maxTimeSeconds: 60, animate: false, animationSpeed: 1 },
+              timestamp: new Date().toISOString()
+            }),
+            ...config,
+            timestamp: new Date().toISOString()
+          }
+        }
+      };
+    });
+  }, []);
+
   // Timetabling methods
   const updateMetaPeriodSchedule = useCallback((
     blockId: string,
@@ -610,6 +645,7 @@ export function VersionDataProvider({ children }: VersionDataProviderProps) {
         updateHardConstraints,
         updateSoftConstraints,
         updateClassSplitPriorities,
+        updateAutoSchedulingConfig,
         updateMetaPeriodSchedule,
         updateLessonTeacher,
         getVersionJsonString

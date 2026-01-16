@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { ArrowUpRight, Loader2, Square, FlaskConical } from "lucide-react";
+import { ArrowUpRight, Loader2, Square, FlaskConical, Play } from "lucide-react";
 import { toast } from "sonner";
 import {
   ResizableHandle,
@@ -27,9 +27,13 @@ import { filterPeriodsByType } from "./_lib/period-label-utils";
 import { Button } from "@/components/ui/button";
 import { TimetableProgressPopover } from "./_components/progress-popover";
 import { StartAutoSchedulingDialog } from "./_components/start-auto-scheduling-dialog";
+import { UnsavedChangesDialog } from "./_components/unsaved-changes-dialog";
 import { cancelAutoSchedulingJob } from "./_actions/cancel-autoscheduling-job";
 import { runDiagnostics } from "./_actions/run-diagnostics";
 import { DiagnosticsResultsDialog } from "./_components/diagnostics-results-dialog";
+import { deleteVersion } from "../_actions/delete-version";
+import { saveAsNewVersion } from "../_actions/save-as-new-version";
+import { getVersionJson } from "../_actions/get-version-json";
 
 // Define stage type
 type Stage = 
@@ -71,12 +75,25 @@ export default function TimetablePage() {
     hasUnsavedChanges,
     updateMetaPeriodSchedule,
     updateLessonTeacher,
+    getVersionJsonString,
   } = useVersionData();
 
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [selectedMetaLessonId, setSelectedMetaLessonId] = useState<string | null>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [isAutoSchedulingDialogOpen, setIsAutoSchedulingDialogOpen] = useState(false);
+  
+  // NEW: Version number state
+  const [versionNumber, setVersionNumber] = useState<number | null>(null);
+
+  // Unsaved changes dialog state
+  const [unsavedChangesDialog, setUnsavedChangesDialog] = useState<{
+    open: boolean;
+    actionType: 'auto-scheduling' | 'diagnostics' | null;
+  }>({
+    open: false,
+    actionType: null,
+  });
 
   // Auto-scheduling job state
   const [activeJobTaskId, setActiveJobTaskId] = useState<string | null>(null);
@@ -108,6 +125,46 @@ export default function TimetablePage() {
     useBlockColors: true,
   });
 
+  // NEW: Fetch version number when versionId changes
+  useEffect(() => {
+    if (!versionId) {
+      setVersionNumber(null);
+      return;
+    }
+
+    const fetchVersionNumber = async () => {
+      try {
+        const supabase = supabaseRef.current;
+        const { data, error } = await supabase
+          .from('projects_versions')
+          .select('version')
+          .eq('id', versionId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching version number:', error);
+          setVersionNumber(null);
+        } else {
+          setVersionNumber(data.version);
+        }
+      } catch (error) {
+        console.error('Error fetching version number:', error);
+        setVersionNumber(null);
+      }
+    };
+
+    fetchVersionNumber();
+  }, [versionId]);
+
+  // Helper to fetch saved version JSON
+  const fetchSavedVersionJson = async () => {
+    const result = await getVersionJson(versionId);
+    if (!result.success || !result.json) {
+      throw new Error(result.error || "Failed to fetch version JSON");
+    }
+    return JSON.parse(result.json);
+  };
+
   // Handle job started - set up realtime subscription
   const handleJobStarted = (taskId: string, newVersionId: string) => {
     setActiveJobTaskId(taskId);
@@ -115,11 +172,61 @@ export default function TimetablePage() {
     setCurrentStage("initialising");
   };
 
-  // Realtime subscription for job updates
+  // [Realtime subscription effects remain the same...]
   useEffect(() => {
     if (!activeJobTaskId) return;
 
     const supabase = supabaseRef.current;
+    
+    const checkInitialStatus = async () => {
+      try {
+        const { data: job } = await supabase
+          .from("autoscheduling_jobs")
+          .select("*")
+          .eq("id", activeJobTaskId)
+          .single();
+
+        if (job) {
+          if (job.status === "failed") {
+            setActiveJobTaskId(null);
+            setActiveJobVersionId(null);
+            setCurrentStage(null);
+            
+            toast.error(job.error || "Auto-scheduling failed");
+            
+            if (activeJobVersionId) {
+              await deleteVersion(orgId, projectId, activeJobVersionId);
+            }
+          } else if (job.status === "cancelled") {
+            setActiveJobTaskId(null);
+            setActiveJobVersionId(null);
+            setCurrentStage(null);
+            
+            toast.info("Auto-scheduling cancelled");
+            
+            if (activeJobVersionId) {
+              await deleteVersion(orgId, projectId, activeJobVersionId);
+            }
+          } else if (job.status === "completed") {
+            setActiveJobTaskId(null);
+            setActiveJobVersionId(null);
+            setCurrentStage(null);
+            
+            toast.success("Auto-scheduling completed!");
+            
+            if (activeJobVersionId) {
+              window.location.href = `/dashboard/${orgId}/${projectId}/timetable?version=${activeJobVersionId}`;
+            }
+          } else if (job.stage) {
+            setCurrentStage(job.stage as Stage);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking initial job status:", error);
+      }
+    };
+
+    checkInitialStatus();
     
     const channel = supabase
       .channel(`autoscheduling_job:${activeJobTaskId}`)
@@ -131,17 +238,13 @@ export default function TimetablePage() {
           table: 'autoscheduling_jobs',
           filter: `id=eq.${activeJobTaskId}`,
         },
-        (payload: any) => {
+        async (payload: any) => {
           const job = payload.new;
           
-          console.log('Job update received:', job);
-          
-          // Update stage if present
           if (job.stage) {
             setCurrentStage(job.stage as Stage);
           }
 
-          // Handle status changes
           if (job.status === 'completed') {
             setActiveJobTaskId(null);
             setActiveJobVersionId(null);
@@ -149,7 +252,6 @@ export default function TimetablePage() {
 
             toast.success("Auto-scheduling completed!");
             
-            // Navigate to the new version with full page reload
             if (activeJobVersionId) {
               window.location.href = `/dashboard/${orgId}/${projectId}/timetable?version=${activeJobVersionId}`;
             }
@@ -159,12 +261,26 @@ export default function TimetablePage() {
             setCurrentStage(null);
 
             toast.error(job.error || "Auto-scheduling failed");
+            
+            if (activeJobVersionId) {
+              const result = await deleteVersion(orgId, projectId, activeJobVersionId);
+              if (!result.success) {
+                console.error("Failed to clean up version:", result.error);
+              }
+            }
           } else if (job.status === 'cancelled') {
             setActiveJobTaskId(null);
             setActiveJobVersionId(null);
             setCurrentStage(null);
 
             toast.info("Auto-scheduling cancelled");
+            
+            if (activeJobVersionId) {
+              const result = await deleteVersion(orgId, projectId, activeJobVersionId);
+              if (!result.success) {
+                console.error("Failed to clean up version:", result.error);
+              }
+            }
           }
         }
       )
@@ -176,13 +292,19 @@ export default function TimetablePage() {
           table: 'autoscheduling_jobs',
           filter: `id=eq.${activeJobTaskId}`,
         },
-        () => {
-          // Job was deleted (cancelled)
+        async () => {
           setActiveJobTaskId(null);
           setActiveJobVersionId(null);
           setCurrentStage(null);
           
           toast.info("Auto-scheduling cancelled");
+          
+          if (activeJobVersionId) {
+            const result = await deleteVersion(orgId, projectId, activeJobVersionId);
+            if (!result.success) {
+              console.error("Failed to clean up version:", result.error);
+            }
+          }
         }
       )
       .subscribe();
@@ -201,18 +323,90 @@ export default function TimetablePage() {
     if (!result.success) {
       toast.error(result.error || "Failed to stop auto-scheduling");
     }
-    // Note: The realtime subscription will handle cleanup when the record is deleted
   };
 
-  // Handle diagnostics
-  const handleRunDiagnostics = async () => {
+  // Handle auto-scheduling button click
+  const handleAutoSchedulingClick = () => {
+    if (hasUnsavedChanges) {
+      setUnsavedChangesDialog({
+        open: true,
+        actionType: 'auto-scheduling',
+      });
+    } else {
+      setIsAutoSchedulingDialogOpen(true);
+    }
+  };
+
+  // Handle diagnostics button click
+  const handleDiagnosticsClick = () => {
+    if (hasUnsavedChanges) {
+      setUnsavedChangesDialog({
+        open: true,
+        actionType: 'diagnostics',
+      });
+    } else {
+      handleRunDiagnosticsWithSavedVersion();
+    }
+  };
+
+  // Handle unsaved changes dialog - Save & Continue
+  const handleSaveAndContinue = async () => {
+    setUnsavedChangesDialog({ open: false, actionType: null });
+    
+    const loadingToast = toast.loading("Saving version...");
+    
+    try {
+      const jsonContent = getVersionJsonString();
+      const result = await saveAsNewVersion(projectId, orgId, jsonContent);
+      
+      if (!result.success) {
+        toast.dismiss(loadingToast);
+        toast.error(result.error || "Failed to save version");
+        return;
+      }
+      
+      toast.dismiss(loadingToast);
+      toast.success(`Saved as version ${result.versionNumber}`);
+      
+      // Navigate to the new version
+      const newUrl = `/dashboard/${orgId}/${projectId}/timetable?version=${result.versionId}`;
+      router.push(newUrl);
+      
+      // Wait a moment for navigation to complete, then open the appropriate dialog
+      setTimeout(() => {
+        if (unsavedChangesDialog.actionType === 'auto-scheduling') {
+          setIsAutoSchedulingDialogOpen(true);
+        } else if (unsavedChangesDialog.actionType === 'diagnostics') {
+          handleRunDiagnosticsWithSavedVersion();
+        }
+      }, 500);
+      
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
+      toast.error(error.message || "Failed to save version");
+    }
+  };
+
+  // Handle unsaved changes dialog - Continue Without Saving
+  const handleContinueWithoutSaving = () => {
+    const actionType = unsavedChangesDialog.actionType;
+    setUnsavedChangesDialog({ open: false, actionType: null });
+    
+    if (actionType === 'auto-scheduling') {
+      setIsAutoSchedulingDialogOpen(true);
+    } else if (actionType === 'diagnostics') {
+      handleRunDiagnosticsWithSavedVersion();
+    }
+  };
+
+  // Run diagnostics with saved version data
+  const handleRunDiagnosticsWithSavedVersion = async () => {
     if (!versionData) return;
 
     setIsDiagnosticsRunning(true);
     setDiagnosticsReport(null);
 
     try {
-      // Get user from Supabase
       const supabase = supabaseRef.current;
       const {
         data: { user },
@@ -224,12 +418,15 @@ export default function TimetablePage() {
         return;
       }
 
+      // Fetch the saved version JSON instead of using context
+      const savedVersionData = await fetchSavedVersionJson();
+
       const result = await runDiagnostics({
         versionId,
         orgId,
         projectId,
         userId: user.id,
-        versionData,
+        versionData: savedVersionData, // Use saved version, not context
         maxTimeSeconds: 30.0,
       });
 
@@ -287,17 +484,13 @@ export default function TimetablePage() {
         },
         (payload: any) => {
           const job = payload.new;
-          
-          console.log('Diagnostics update received:', job);
 
-          // Handle status changes
           if (job.status === 'completed') {
             setIsDiagnosticsRunning(false);
             setDiagnosticsTaskId(null);
 
             toast.success("Diagnostics completed!");
             
-            // Fetch the result
             fetchDiagnosticsResult(diagnosticsTaskId);
           } else if (job.status === 'failed') {
             setIsDiagnosticsRunning(false);
@@ -326,7 +519,6 @@ export default function TimetablePage() {
     let clearedPeriods = 0;
     let clearedTeachers = 0;
 
-    // Clear all meta period schedules
     for (const block of versionData.model.blocks) {
       for (const metaLesson of block.meta_lessons) {
         for (const metaPeriod of metaLesson.meta_periods) {
@@ -343,7 +535,6 @@ export default function TimetablePage() {
       }
     }
 
-    // Clear all teacher assignments
     for (const block of versionData.model.blocks) {
       for (const teachingGroup of block.teaching_groups) {
         for (const classItem of teachingGroup.classes) {
@@ -368,24 +559,21 @@ export default function TimetablePage() {
     );
   };
 
-  // Parse all periods
+  // [All the useMemo hooks and grid logic remain the same...]
   const allPeriods = useMemo(() => {
     if (!versionData) return [];
     return parsePeriods(versionData);
   }, [versionData]);
 
-  // Filter periods based on selected types
   const filteredPeriods = useMemo(() => {
     return filterPeriodsByType(allPeriods, gridViewOptions.showPeriodTypes);
   }, [allPeriods, gridViewOptions.showPeriodTypes]);
 
-  // Compute form groups availability
   const formGroupsAvailability = useMemo(() => {
     if (!versionData) return [];
     return computeFormGroupsAvailability(versionData);
   }, [versionData]);
 
-  // Compute teachers availability
   const teachersAvailability = useMemo(() => {
     if (!versionData) return [];
     return computeTeachersAvailability(
@@ -395,7 +583,6 @@ export default function TimetablePage() {
     );
   }, [versionData, selectedMetaLessonId, selectedLessonId]);
 
-  // Filter teachers based on teacher filter option
   const filteredTeachersAvailability = useMemo(() => {
     if (gridViewOptions.teacherFilter === "all") {
       return teachersAvailability;
@@ -425,14 +612,12 @@ export default function TimetablePage() {
     return teachersAvailability;
   }, [teachersAvailability, gridViewOptions.teacherFilter, versionData]);
 
-  // Get feeder form groups for selected block
   const feederFormGroupIds = useMemo(() => {
     if (!selectedBlockId || !versionData) return [];
     const block = versionData.model.blocks.find((b) => b.id === selectedBlockId);
     return block?.feeder_form_groups || [];
   }, [selectedBlockId, versionData]);
 
-  // Filter form groups based on "selected only" option
   const effectiveFeederFormGroupIds = useMemo(() => {
     if (gridViewOptions.showSelectedLessonFormGroupsOnly && selectedBlockId) {
       return feederFormGroupIds;
@@ -444,7 +629,6 @@ export default function TimetablePage() {
     feederFormGroupIds,
   ]);
 
-  // Handle meta lesson selection
   const handleMetaLessonSelect = (blockId: string, metaLessonId: string) => {
     if (!blockId || !metaLessonId) {
       setSelectedBlockId(null);
@@ -473,7 +657,6 @@ export default function TimetablePage() {
     }
   };
 
-  // Handle period click to assign/unassign meta lesson
   const handlePeriodClick = (periodId: string) => {
     if (!selectedMetaLessonId || !versionData || !selectedBlockId) return;
 
@@ -510,7 +693,6 @@ export default function TimetablePage() {
     }
   };
 
-  // Handle teacher click to assign/unassign teacher to lesson
   const handleTeacherClick = (teacherId: string, lessonId: string) => {
     if (!selectedLessonId || !versionData || !selectedBlockId) return;
 
@@ -587,7 +769,6 @@ export default function TimetablePage() {
     <div className="h-full bg-white">
       <div className="h-full w-full bg-white">
         <ResizablePanelGroup orientation="horizontal" className="h-full">
-          {/* Left Column: Meta Lessons */}
           <ResizablePanel defaultSize={'20'} minSize={'20'} maxSize={'40'}>
             <div className="h-full flex flex-col min-h-0">
               <div className="py-2 px-4.5 border-b flex justify-between items-center shrink-0">
@@ -608,10 +789,8 @@ export default function TimetablePage() {
 
           <ResizableHandle withHandle />
 
-          {/* Right Column: Schedule Grids */}
           <ResizablePanel defaultSize={'80'}>
             <div className="h-full flex flex-col min-h-0 bg-stone-100">
-              {/* Toolbar */}
               <div className="shrink-0 bg-white flex justify-between items-center px-4 py-3 border-b">
                 {isJobRunning ? (
                   <div className="flex items-center gap-3 flex-1">
@@ -631,20 +810,20 @@ export default function TimetablePage() {
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2">
                       <Button
                         size="xs"
                         className="text-xs"
-                        onClick={() => setIsAutoSchedulingDialogOpen(true)}
+                        onClick={handleAutoSchedulingClick}
                       >
-                        Build
-                        <ArrowUpRight className="size-3" />
+                        <Play className="fill-white size-3" />
+                        Autoschedule
                       </Button>
                       <Button
                         size="xs"
                         variant="outline"
                         className="text-xs"
-                        onClick={handleRunDiagnostics}
+                        onClick={handleDiagnosticsClick}
                         disabled={isDiagnosticsRunning}
                       >
                         {isDiagnosticsRunning ? (
@@ -654,7 +833,6 @@ export default function TimetablePage() {
                           </>
                         ) : (
                           <>
-                            <FlaskConical className="size-3" />
                             Check Feasibility
                           </>
                         )}
@@ -672,7 +850,6 @@ export default function TimetablePage() {
                 )}
               </div>
 
-              {/* All Grids - Resizable/scrollable */}
               <div className="flex-1 overflow-hidden relative">
                 {isDiagnosticsRunning && (
                   <div className="absolute inset-0 bg-white z-50 flex items-center justify-center">
@@ -723,7 +900,6 @@ export default function TimetablePage() {
                 )}
                 
                 <ResizablePanelGroup orientation="vertical" className="h-full">
-                  {/* Form Groups Grid */}
                   {gridViewOptions.showFormGroupsGrid && (
                     <>
                       <ResizablePanel defaultSize={40} minSize={15}>
@@ -743,7 +919,6 @@ export default function TimetablePage() {
                     </>
                   )}
 
-                  {/* Summary Availability Grid */}
                   <ResizablePanel defaultSize={20} minSize={10}>
                     <SummaryAvailabilityGrid
                       versionData={versionData}
@@ -755,7 +930,6 @@ export default function TimetablePage() {
                     />
                   </ResizablePanel>
 
-                  {/* Teachers and Rooms Grids */}
                   {(gridViewOptions.showTeachersGrid ||
                     gridViewOptions.showRoomsGrid) && (
                     <>
@@ -814,6 +988,15 @@ export default function TimetablePage() {
         </ResizablePanelGroup>
       </div>
 
+      {/* Unsaved Changes Dialog */}
+      <UnsavedChangesDialog
+        open={unsavedChangesDialog.open}
+        onOpenChange={(open) => setUnsavedChangesDialog({ open, actionType: null })}
+        onSaveAndContinue={handleSaveAndContinue}
+        onContinueWithoutSaving={handleContinueWithoutSaving}
+        actionName={unsavedChangesDialog.actionType === 'auto-scheduling' ? 'Auto-scheduling' : 'Diagnostics'}
+      />
+
       {/* Auto-Scheduling Dialog */}
       <StartAutoSchedulingDialog
         open={isAutoSchedulingDialogOpen}
@@ -822,7 +1005,9 @@ export default function TimetablePage() {
         orgId={orgId}
         projectId={projectId}
         versionId={versionId}
+        versionNumber={versionNumber || 0}
         onJobStarted={handleJobStarted}
+        fetchSavedVersionJson={fetchSavedVersionJson}
       />
 
       {/* Diagnostics Results Dialog */}

@@ -211,7 +211,7 @@ export function CurriculumDiagram({
               if (maxClasses === 2) return 2;
               if (maxClasses === 3) return 2;
               if (maxClasses === 4) return 3;
-              if (maxClasses === 5) return 3;
+              if (maxClasses === 5) return 4;
               if (maxClasses === 6) return 4;
               if (maxClasses === 7) return 5;
               if (maxClasses === 8) return 6;

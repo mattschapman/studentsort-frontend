@@ -1,4 +1,4 @@
-// app/dashboard/(projects)/[orgId]/[projectId]/_actions/cancel-autoscheduling-job.ts
+// app/dashboard/(projects)/[orgId]/[projectId]/timetable/_actions/cancel-autoscheduling-job.ts
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
@@ -10,47 +10,43 @@ export async function cancelAutoSchedulingJob(
   versionId: string
 ) {
   try {
-    const supabase = await createClient();
-
-    // Cancel the Celery task via FastAPI
-    const response = await fetch(
-      `${FASTAPI_URL}/api/v1/solve/dummy/${taskId}/cancel`,
-      {
+    // Step 1: Cancel the Celery task via FastAPI
+    try {
+      const response = await fetch(`${FASTAPI_URL}/api/v1/solve/${taskId}/cancel`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+      });
 
-    if (!response.ok) {
-      console.warn("Failed to cancel FastAPI task, continuing with cleanup");
+      if (!response.ok) {
+        console.error("Failed to cancel Celery task:", await response.text());
+        // Continue anyway - we still want to clean up the database
+      }
+    } catch (error) {
+      console.error("Error cancelling Celery task:", error);
+      // Continue anyway - we still want to clean up the database
     }
 
-    // Delete job record (this also triggers realtime notification)
-    const { error: jobError } = await supabase
+    // Step 2: Delete the job record from Supabase
+    // This will trigger the DELETE event in the realtime subscription
+    // which will handle version cleanup
+    const supabase = await createClient();
+    const { error: deleteError } = await supabase
       .from("autoscheduling_jobs")
       .delete()
       .eq("id", taskId);
 
-    if (jobError) {
-      console.error("Failed to delete job record:", jobError);
+    if (deleteError) {
+      console.error("Failed to delete job record:", deleteError);
+      return {
+        success: false,
+        error: "Failed to cancel job",
+      };
     }
-
-    // Delete the placeholder version (this will cascade delete the file record)
-    const { error: deleteError } = await supabase
-      .from("projects_versions")
-      .delete()
-      .eq("id", versionId);
-
-    if (deleteError) throw deleteError;
 
     return {
       success: true,
-      message: "Job cancelled and placeholder version deleted",
     };
   } catch (error: any) {
-    console.error("Error cancelling job:", error);
+    console.error("Error in cancelAutoSchedulingJob:", error);
     return {
       success: false,
       error: error.message || "Failed to cancel job",

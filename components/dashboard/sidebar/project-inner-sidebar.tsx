@@ -111,6 +111,76 @@ const innerNavigationItems: Record<string, SectionData> = {
       },
     ]
   },
+  checks: {
+    title: "Checks",
+    sections: [
+      {
+        label: "STAFFING",
+        items: [
+          {
+            label: "Resources",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/checks`
+          },
+          {
+            label: "Combing Chart",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/checks/combing-chart`
+          },
+          {
+            label: "Conflict Matrix",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/checks/conflict-matrix`
+          },
+        ]
+      },
+      {
+        label: "SCHEDULING",
+        items: [
+          {
+            label: "Block Validation",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/checks/block-validation`
+          },
+          {
+            label: "Year Group Validation",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/checks/year-group-validation`
+          },
+          {
+            label: "Subject Validation",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/checks/subject-validation`
+          },
+        ]
+      },
+    ]
+  },
+  analysis: {
+    title: "Analysis",
+    sections: [
+      {
+        label: "STAFFING",
+        items: [
+          {
+            label: "Combing Chart",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/analysis/combing-chart`
+          },
+          {
+            label: "Conflict Matrix",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/analysis/conflict-matrix`
+          },
+          {
+            label: "Staff Deployment Analysis",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/analysis/staff-deployment-analysis`
+          },
+        ]
+      },
+      {
+        label: "CHECKS",
+        items: [
+          {
+            label: "Diagnostics",
+            href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/analysis`
+          }, 
+        ]
+      },
+    ]
+  },
   settings: {
     title: "Project Settings",
     sections: [
@@ -157,7 +227,9 @@ export default function ProjectInnerSidebar({ orgId, projectId }: ProjectInnerSi
     if (pathname.includes('/data')) return 'data'
     if (pathname.includes('/model')) return 'model'
     if (pathname.includes('/staffing')) return 'staffing'
+    if (pathname.includes('/analysis')) return 'analysis'
     if (pathname.includes('/settings')) return 'settings'
+    if (pathname.includes('/checks')) return 'checks'
     return null
   }
 

@@ -12,6 +12,9 @@ import {
   Grid,
   Box,
   PanelLeft,
+  Lightbulb,
+  TriangleAlert,
+  CheckSquare,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -62,15 +65,24 @@ export const navigationSections = [
         isBackButton: false,
         preserveVersion: true,
       },
-      {
-        label: "Staffing",
-        icon: Users,
-        href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/staffing`,
-        exactMatch: false,
-        hasInnerSidebar: false,
-        isBackButton: false,
-        preserveVersion: true,
-      },
+      // {
+      //   label: "Checks",
+      //   icon: CheckSquare,
+      //   href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/checks`,
+      //   exactMatch: false,
+      //   hasInnerSidebar: false,
+      //   isBackButton: false,
+      //   preserveVersion: true,
+      // },
+      // {
+      //   label: "Staffing",
+      //   icon: Users,
+      //   href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/staffing`,
+      //   exactMatch: false,
+      //   hasInnerSidebar: false,
+      //   isBackButton: false,
+      //   preserveVersion: true,
+      // },
       {
         label: "Timetable",
         icon: Calendar,
@@ -80,30 +92,17 @@ export const navigationSections = [
         isBackButton: false,
         preserveVersion: true,
       },
+      // {
+      //   label: "Analysis",
+      //   icon: Lightbulb,
+      //   href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/analysis`,
+      //   exactMatch: false,
+      //   hasInnerSidebar: false,
+      //   isBackButton: false,
+      //   preserveVersion: true,
+      // },
     ]
   },
-  // {
-  //   items: [
-  //     {
-  //       label: "Staffing",
-  //       icon: Users,
-  //       href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/staffing`,
-  //       exactMatch: false,
-  //       hasInnerSidebar: false,
-  //       isBackButton: false,
-  //       preserveVersion: true,
-  //     },
-  //     {
-  //       label: "Timetable",
-  //       icon: Calendar,
-  //       href: (orgId: string, projectId: string) => `/dashboard/${orgId}/${projectId}/timetable`,
-  //       exactMatch: false,
-  //       hasInnerSidebar: false,
-  //       isBackButton: false,
-  //       preserveVersion: true,
-  //     },
-  //   ]
-  // },
   {
     items: [
       {

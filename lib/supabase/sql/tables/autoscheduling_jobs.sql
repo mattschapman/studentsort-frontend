@@ -112,3 +112,12 @@ ON autoscheduling_jobs(stage);
 
 -- Optional: Comment for documentation
 COMMENT ON COLUMN autoscheduling_jobs.stage IS 'Current processing stage of the auto-scheduling job';
+
+
+-- Add the new column
+ALTER TABLE public.autoscheduling_jobs 
+  ADD COLUMN result_version_id TEXT REFERENCES public.projects_versions(id);
+
+-- Add comment explaining the column
+COMMENT ON COLUMN public.autoscheduling_jobs.result_version_id IS 
+  'The version ID created as the result of this autoscheduling job (NULL until completed)';
