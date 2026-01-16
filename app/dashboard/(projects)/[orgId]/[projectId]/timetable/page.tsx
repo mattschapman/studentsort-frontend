@@ -994,7 +994,7 @@ export default function TimetablePage() {
         onOpenChange={(open) => setUnsavedChangesDialog({ open, actionType: null })}
         onSaveAndContinue={handleSaveAndContinue}
         onContinueWithoutSaving={handleContinueWithoutSaving}
-        actionName={unsavedChangesDialog.actionType === 'auto-scheduling' ? 'Auto-scheduling' : 'Diagnostics'}
+        actionName={unsavedChangesDialog.actionType === 'auto-scheduling' ? 'Autoscheduling' : 'Diagnostics'}
       />
 
       {/* Auto-Scheduling Dialog */}

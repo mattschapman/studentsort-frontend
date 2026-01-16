@@ -34,7 +34,6 @@ export function UnsavedChangesDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-amber-500" />
             Unsaved Changes
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-2">
@@ -42,7 +41,7 @@ export function UnsavedChangesDialog({
               You have unsaved changes in your current version. {actionName} will use the{" "}
               <strong>last saved version</strong>, not your current changes.
             </span>
-            <span>Would you like to save your changes first?</span>
+            <span> Would you like to save your changes first?</span>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
