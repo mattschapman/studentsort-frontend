@@ -2,12 +2,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { submitDiagnosticsJob, checkDiagnosticsStatus } from "../../_actions/submit-diagnostics-job";
 
 type FeasibilityStatus = 'idle' | 'checking' | 'passed' | 'failed';
 
 interface FeasibilityStepProps {
+  versionData: any;
+  orgId: string;
+  projectId: string;
   feasibilityStatus: FeasibilityStatus;
   feasibilityError: string | null;
   onStatusChange: (status: FeasibilityStatus) => void;
@@ -15,6 +18,9 @@ interface FeasibilityStepProps {
 }
 
 export function FeasibilityStep({
+  versionData,
+  orgId,
+  projectId,
   feasibilityStatus,
   feasibilityError,
   onStatusChange,
@@ -24,27 +30,76 @@ export function FeasibilityStep({
     onStatusChange('checking');
     onErrorChange(null);
 
-    // Simulate feasibility check (50% pass rate)
-    setTimeout(() => {
-      const passed = Math.random() > 0.5;
-      if (passed) {
-        onStatusChange('passed');
-      } else {
+    try {
+      // Submit diagnostics job
+      const result = await submitDiagnosticsJob({
+        versionData,
+        orgId,
+        projectId,
+        maxTimeSeconds: 30,
+      });
+
+      if (!result.success) {
         onStatusChange('failed');
-        onErrorChange('The timetable configuration is not feasible with the current constraints.');
+        onErrorChange(result.error || 'Failed to start feasibility check');
+        return;
       }
-    }, 2000);
+
+      const taskId = result.taskId!;
+
+      // Poll for status
+      const pollInterval = setInterval(async () => {
+        const statusResult = await checkDiagnosticsStatus(taskId);
+
+        if (!statusResult.success) {
+          clearInterval(pollInterval);
+          onStatusChange('failed');
+          onErrorChange('Failed to check task status');
+          return;
+        }
+
+        const status = statusResult.status;
+
+        if (status === 'completed') {
+          clearInterval(pollInterval);
+          // Check if overall feasible
+          const overallFeasible = statusResult.result?.overall_feasible;
+          if (overallFeasible) {
+            onStatusChange('passed');
+          } else {
+            onStatusChange('failed');
+            onErrorChange('The timetable configuration is not feasible with the current constraints.');
+          }
+        } else if (status === 'failed') {
+          clearInterval(pollInterval);
+          onStatusChange('failed');
+          onErrorChange(statusResult.error || 'Feasibility check failed');
+        }
+      }, 2000);
+
+      // Timeout after 5 minutes
+      setTimeout(() => {
+        clearInterval(pollInterval);
+        if (feasibilityStatus === 'checking') {
+          onStatusChange('failed');
+          onErrorChange('Feasibility check timed out');
+        }
+      }, 300000);
+    } catch (error: any) {
+      onStatusChange('failed');
+      onErrorChange(error.message || 'An unexpected error occurred');
+      console.error('Feasibility check error:', error);
+    }
   };
 
   const handleRunDiagnostics = () => {
-    // Placeholder for diagnostics
-    console.log('Run diagnostics');
+    // Placeholder for diagnostics - could open a separate dialog or navigate to a page
+    console.log('Run full diagnostics');
   };
 
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-
         {/* Feasibility Status Display */}
         {feasibilityStatus === 'idle' && (
           <div className="border border-dashed rounded-lg p-6 text-center">

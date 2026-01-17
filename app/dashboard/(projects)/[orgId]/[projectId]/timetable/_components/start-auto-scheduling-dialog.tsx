@@ -1,9 +1,7 @@
-// app/dashboard/(projects)/[orgId]/[projectId]/timetable/_components/start-auto-scheduling-dialog.tsx
 "use client";
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -14,46 +12,29 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ListFilter, ChevronDown, Plus, Trash2, MoreHorizontal, ExternalLink, X, AlertCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { createPlaceholderVersion } from "../_actions/create-placeholder-version";
 import { submitAutoSchedulingJob } from "../_actions/submit-autoscheduling-job";
+import type { HardConstraints, SoftConstraints } from "@/lib/contexts/version-data-context";
+import type { FilterConfig, AutoSchedulingStages, SolverConfig } from "./autoscheduling-dialog/types";
+import { ScopeStep } from "./autoscheduling-dialog/scope-step";
+import { ConstraintsStep } from "./autoscheduling-dialog/constraints-step";
+import { FeasibilityStep } from "./autoscheduling-dialog/feasibility-step";
+import { SolverStep } from "./autoscheduling-dialog/solver-step";
 
 interface StartAutoSchedulingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  versionData: any; // Used for UI calculations only
+  versionData: any;
   orgId: string;
   projectId: string;
   versionId: string;
-  versionNumber: number; // NEW: Display in dialog
+  versionNumber: number;
   onJobStarted: (taskId: string, newVersionId: string) => void;
-  fetchSavedVersionJson: () => Promise<any>; // Function to fetch saved version
+  fetchSavedVersionJson: () => Promise<any>;
 }
 
-interface FilterConfig {
-  id: string;
-  field: 'year-group' | 'subject';
-  operator: 'is' | 'is-not';
-  values: string[];
-}
-
-interface AutoSchedulingStages {
-  blocking: boolean;
-  scheduling: boolean;
-  staffing: boolean;
-}
+type FeasibilityStatus = 'idle' | 'checking' | 'passed' | 'failed';
 
 export function StartAutoSchedulingDialog({
   open,
@@ -62,235 +43,112 @@ export function StartAutoSchedulingDialog({
   orgId,
   projectId,
   versionId,
-  versionNumber, // NEW
+  versionNumber,
   onJobStarted,
   fetchSavedVersionJson,
 }: StartAutoSchedulingDialogProps) {
   const router = useRouter();
+  const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Step 1: Scope
   const [stages, setStages] = useState<AutoSchedulingStages>({
     blocking: true,
     scheduling: true,
     staffing: true,
   });
-  const [maxTimeSeconds, setMaxTimeSeconds] = useState<number>(60);
   const [activeFilters, setActiveFilters] = useState<FilterConfig[]>([]);
-  const [filterSearchTerms, setFilterSearchTerms] = useState<Record<string, string>>({});
   const [ignoreFixedAssignments, setIgnoreFixedAssignments] = useState<boolean>(false);
 
-  // [All existing useMemo hooks remain the same - these use versionData for UI only...]
-  const availableYearGroups = useMemo(() => {
-    if (!versionData) return [];
-    const yearGroups = new Set<string>();
-    versionData.model.blocks.forEach((block: any) => {
-      if (block.year_group) {
-        yearGroups.add(block.year_group.toString());
-      }
-    });
-    return Array.from(yearGroups).sort((a, b) => parseInt(a) - parseInt(b));
-  }, [versionData]);
-
-  const availableSubjects = useMemo(() => {
-    if (!versionData) return [];
-    const subjectsMap = new Map<string, string>();
+  // Calculate default max_periods_per_day_per_teacher
+  const defaultMaxPeriodsPerDay = useMemo(() => {
+    if (!versionData?.cycle?.periods) return 5;
     
-    versionData.model.blocks.forEach((block: any) => {
-      block.teaching_groups?.forEach((tg: any) => {
-        tg.classes?.forEach((cls: any) => {
-          const subject = versionData.data.subjects.find((s: any) => s.id === cls.subject);
-          if (subject) {
-            subjectsMap.set(subject.id, subject.name);
-          }
-        });
-      });
+    const dayMap = new Map<string, number>();
+    versionData.cycle.periods.forEach((period: any) => {
+      if (period.type !== 'Lesson') return;
+      const parts = period.id.split('-');
+      if (parts.length < 3) return;
+      const day = parts.slice(0, -1).join('-');
+      dayMap.set(day, (dayMap.get(day) || 0) + 1);
     });
+    
+    if (dayMap.size === 0) return 5;
+    const avgPeriods = Array.from(dayMap.values()).reduce((a, b) => a + b, 0) / dayMap.size;
+    return Math.max(1, Math.floor(avgPeriods) - 1);
+  }, [versionData?.cycle?.periods]);
 
-    return Array.from(subjectsMap.entries())
-      .map(([id, title]) => ({ id, title }))
-      .sort((a, b) => a.title.localeCompare(b.title));
-  }, [versionData]);
-
-  const overallStats = useMemo(() => {
-    if (!versionData) return { total: 0, blocked: 0, scheduled: 0, staffed: 0 };
-
-    let total = 0;
-    let scheduled = 0;
-    let staffed = 0;
-
-    versionData.model.blocks.forEach((block: any) => {
-      block.teaching_groups?.forEach((tg: any) => {
-        tg.classes?.forEach((cls: any) => {
-          cls.lessons?.forEach((lesson: any) => {
-            total++;
-
-            const metaLesson = block.meta_lessons?.find((ml: any) =>
-              ml.meta_periods?.[0]?.id === lesson.meta_period_id
-            );
-            const isScheduled = metaLesson?.meta_periods?.[0]?.start_period_id;
-            if (isScheduled) scheduled++;
-
-            const isStaffed = !!lesson.teacher_id;
-            if (isStaffed) staffed++;
-          });
-        });
-      });
-    });
-
-    const blocked = total;
-    return { total, blocked, scheduled, staffed };
-  }, [versionData]);
-
-  const scopeStats = useMemo(() => {
-    if (!versionData) return {
-      blocking: { unblocked: 0, unblockedInScope: 0 },
-      scheduling: { unscheduled: 0, unscheduledInScope: 0 },
-      staffing: { unstaffed: 0, unstaffedInScope: 0 },
-    };
-
-    let unblocked = 0;
-    let unblockedInScope = 0;
-    let unscheduled = 0;
-    let unscheduledInScope = 0;
-    let unstaffed = 0;
-    let unstaffedInScope = 0;
-
-    versionData.model.blocks.forEach((block: any) => {
-      block.teaching_groups?.forEach((tg: any) => {
-        tg.classes?.forEach((cls: any) => {
-          cls.lessons?.forEach((lesson: any) => {
-            const yearGroupMatch = activeFilters
-              .filter(f => f.field === 'year-group')
-              .every(filter => {
-                const blockYearGroup = block.year_group?.toString();
-                const matches = filter.values.includes(blockYearGroup);
-                return filter.operator === 'is' ? matches : !matches;
-              });
-
-            const subjectMatch = activeFilters
-              .filter(f => f.field === 'subject')
-              .every(filter => {
-                const matches = filter.values.includes(cls.subject);
-                return filter.operator === 'is' ? matches : !matches;
-              });
-
-            const matchesFilters = activeFilters.length === 0 || (yearGroupMatch && subjectMatch);
-
-            const metaLesson = block.meta_lessons?.find((ml: any) =>
-              ml.meta_periods?.[0]?.id === lesson.meta_period_id
-            );
-            const isScheduled = metaLesson?.meta_periods?.[0]?.start_period_id;
-            const isStaffed = !!lesson.teacher_id;
-
-            if (!isScheduled) {
-              unscheduled++;
-              if (matchesFilters) unscheduledInScope++;
-            }
-
-            if (!isStaffed) {
-              unstaffed++;
-              if (matchesFilters) unstaffedInScope++;
-            }
-          });
-        });
-      });
-    });
-
+  // Step 2: Constraints
+  const [hardConstraints, setHardConstraints] = useState<HardConstraints>(() => {
+    const existing = versionData?.settings?.constraints?.hard;
     return {
-      blocking: { unblocked, unblockedInScope },
-      scheduling: { unscheduled, unscheduledInScope },
-      staffing: { unstaffed, unstaffedInScope },
+      // Always enabled constraints
+      studentConflictPrevention: true,
+      teacherConflictPrevention: true,
+      requireSpecialists: true,
+      classSpacing: true,
+      maxCapacity: true,
+      targetCapacity: true,
+      maximiseCoverFlexibility: true,
+      // Configurable constraints
+      doubleLessonRestrictedPeriods: existing?.doubleLessonRestrictedPeriods || [],
+      min_slt_available: existing?.min_slt_available ?? 0,
+      max_teachers_per_class: existing?.max_teachers_per_class ?? 2,
+      max_periods_per_day_per_teacher: existing?.max_periods_per_day_per_teacher ?? defaultMaxPeriodsPerDay,
     };
-  }, [versionData, activeFilters]);
+  });
 
-  // [All existing handler functions remain the same...]
-  const handleStageChange = (stage: keyof AutoSchedulingStages, checked: boolean) => {
-    setStages(prev => {
-      const newStages = { ...prev, [stage]: checked };
-
-      if (stage === 'staffing' && checked) {
-        newStages.scheduling = true;
-        newStages.blocking = true;
-      } else if (stage === 'scheduling' && checked) {
-        newStages.blocking = true;
-      }
-
-      if (stage === 'blocking' && !checked) {
-        newStages.scheduling = false;
-        newStages.staffing = false;
-      } else if (stage === 'scheduling' && !checked) {
-        newStages.staffing = false;
-      }
-
-      return newStages;
-    });
-  };
-
-  const addFilter = (field: FilterConfig['field']) => {
-    const newFilter: FilterConfig = {
-      id: `filter-${Date.now()}`,
-      field,
-      operator: 'is',
-      values: [],
+  const [softConstraints, setSoftConstraints] = useState<SoftConstraints>(() => {
+    const existing = versionData?.settings?.constraints?.soft;
+    return {
+      classSplitting: existing?.classSplitting ?? 50,
+      balanceWorkload: existing?.balanceWorkload ?? 50,
+      dailyOverloadPenalty: existing?.dailyOverloadPenalty ?? 50,
     };
-    setActiveFilters(prev => [...prev, newFilter]);
-  };
+  });
 
-  const updateFilter = (id: string, updates: Partial<FilterConfig>) => {
-    setActiveFilters(prev =>
-      prev.map(filter => (filter.id === id ? { ...filter, ...updates } : filter))
-    );
-  };
+  const [classSplitPriorities, setClassSplitPriorities] = useState<Record<string, number>>(
+    versionData?.settings?.classSplitPriorities || {}
+  );
 
-  const removeFilter = (id: string) => {
-    setActiveFilters(prev => prev.filter(filter => filter.id !== id));
-    setFilterSearchTerms(prev => {
-      const newTerms = { ...prev };
-      delete newTerms[id];
-      return newTerms;
-    });
-  };
+  // Step 3: Feasibility
+  const [feasibilityStatus, setFeasibilityStatus] = useState<FeasibilityStatus>('idle');
+  const [feasibilityError, setFeasibilityError] = useState<string | null>(null);
 
-  const clearAllFilters = () => {
-    setActiveFilters([]);
-    setFilterSearchTerms({});
-  };
+  // Step 4: Solver
+  const [solverConfig, setSolverConfig] = useState<SolverConfig>({
+    type: 'g1-base',
+    maxTimeSeconds: 60,
+    animate: false,
+    animationSpeed: 1,
+  });
 
-  const getFieldDisplayName = (field: string) => {
-    switch (field) {
-      case 'year-group': return 'Year';
-      case 'subject': return 'Subject';
-      default: return field;
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!isSubmitting && feasibilityStatus !== 'checking') {
+      onOpenChange(newOpen);
+      if (!newOpen) {
+        // Reset to step 1 when closing
+        setStep(1);
+        setFeasibilityStatus('idle');
+        setFeasibilityError(null);
+      }
     }
   };
 
-  const getFieldOptions = (field: string) => {
-    switch (field) {
-      case 'year-group':
-        return availableYearGroups.map(yg => ({ id: yg, title: `Year ${yg}` }));
-      case 'subject':
-        return availableSubjects;
-      default:
-        return [];
-    }
+  const handleNext = () => {
+    if (step < 4) setStep(step + 1);
   };
 
-  const getFilterDisplayText = (filter: FilterConfig) => {
-    const options = getFieldOptions(filter.field);
-    const selectedOptions = options.filter(option => filter.values.includes(option.id));
-    
-    if (selectedOptions.length === 0) return '';
-    
-    return selectedOptions.map(opt => opt.title).join(', ');
+  const handleBack = () => {
+    if (step > 1) setStep(step - 1);
   };
 
-  // Fetches saved version JSON instead of using context
   const handleStartAutoScheduling = async () => {
     setIsSubmitting(true);
     const loadingToast = toast.loading("Starting auto-scheduling...");
 
     try {
-      // Step 1: Fetch the saved version JSON (not from context)
+      // Step 1: Fetch the saved version JSON
       const savedVersionData = await fetchSavedVersionJson();
       
       // Step 2: Get current user ID from metadata
@@ -305,15 +163,15 @@ export function StartAutoSchedulingDialog({
 
       const newVersionId = placeholderResult.versionId;
       const fileId = placeholderResult.fileId;
-      const versionNumber = placeholderResult.versionNumber!;
+      const newVersionNumber = placeholderResult.versionNumber!;
 
       // Step 4: Prepare version data with autoSchedulingConfig
       const versionDataWithConfig = {
-        ...savedVersionData, // Use saved version, not context
+        ...savedVersionData,
         metadata: {
           ...savedVersionData.metadata,
           version_id: newVersionId,
-          version_number: versionNumber,
+          version_number: newVersionNumber,
           created_at: new Date().toISOString(),
           created_by: userId,
         },
@@ -322,8 +180,13 @@ export function StartAutoSchedulingDialog({
           autoSchedulingConfig: {
             stages,
             filters: activeFilters,
-            maxTimeSeconds,
             ignoreFixedAssignments,
+            constraints: {
+              hard: hardConstraints,
+              soft: softConstraints,
+              classSplitPriorities,
+            },
+            solver: solverConfig,
             timestamp: new Date().toISOString(),
           },
         },
@@ -336,8 +199,8 @@ export function StartAutoSchedulingDialog({
         orgId,
         projectId,
         userId,
-        versionData: versionDataWithConfig, // This now uses the saved version
-        maxTimeSeconds,
+        versionData: versionDataWithConfig,
+        maxTimeSeconds: solverConfig.maxTimeSeconds,
         ignoreFixedAssignments,
       });
 
@@ -361,345 +224,131 @@ export function StartAutoSchedulingDialog({
     }
   };
 
-  const renderFilterButton = (filter: FilterConfig) => {
-    const options = getFieldOptions(filter.field);
-    const searchTerm = filterSearchTerms[filter.id] || '';
-    const filteredOptions = options.filter(option =>
-      option.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const selectedOptions = options.filter(option => filter.values.includes(option.id));
-    const isActive = selectedOptions.length > 0;
-    const displayText = getFilterDisplayText(filter);
-
-    return (
-      <DropdownMenu key={filter.id}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="xs"
-            className={`rounded-full text-xs ${
-              isActive ? 'bg-green-100 text-green-500 hover:bg-green-200 hover:text-green-600 border-green-200 hover:border-green-300' : ''
-            }`}
-          >
-            <ListFilter className="size-3" />
-            {getFieldDisplayName(filter.field)}
-            {isActive && displayText && (
-              <span className="max-w-50 truncate -ml-1.5">: {displayText}</span>
-            )}
-            <ChevronDown className="h-3 w-3" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-64 p-0">
-          <div className="px-3 py-1.5">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
-                <span className="py-0.5">{getFieldDisplayName(filter.field)}</span>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost" size="xs" className="-ml-0.5 p-1 text-xs gap-[0.1rem] font-bold">
-                      {filter.operator === 'is' ? 'is' : 'is not'}
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-24 p-1" align="start">
-                    <Button
-                      variant="ghost"
-                      size="xs"
-                      className="w-full justify-start text-xs px-2 py-1.5"
-                      onClick={() => updateFilter(filter.id, { operator: 'is' })}
-                    >
-                      is
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="xs" 
-                      className="w-full justify-start text-xs p-2 py-1.5"
-                      onClick={() => updateFilter(filter.id, { operator: 'is-not' })}
-                    >
-                      is not
-                    </Button>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="xs" className="h-6 w-6 p-0">
-                    <MoreHorizontal className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem onClick={() => removeFilter(filter.id)} className="hover:text-destructive focus:text-destructive text-xs">
-                    <Trash2 className="w-3 h-3" />
-                    Delete filter
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-
-            <Input
-              placeholder="Select one or more options..."
-              value={searchTerm}
-              onChange={(e) => setFilterSearchTerms(prev => ({ ...prev, [filter.id]: e.target.value }))}
-              className="h-8 text-xs placeholder:text-xs"
-              autoFocus
-            />
-          </div>
-
-          <div className="pt-1 pb-2 px-1 max-h-64 overflow-y-auto">
-            {filteredOptions.map(option => (
-              <div key={option.id} className="flex items-center space-x-2 px-3 py-1 hover:bg-gray-100 rounded-md">
-                <Checkbox
-                  id={`${filter.id}-${option.id}`}
-                  checked={filter.values.includes(option.id)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      updateFilter(filter.id, {
-                        values: [...filter.values, option.id]
-                      });
-                    } else {
-                      updateFilter(filter.id, {
-                        values: filter.values.filter(v => v !== option.id)
-                      });
-                    }
-                  }}
-                />
-                <label
-                  htmlFor={`${filter.id}-${option.id}`}
-                  className="text-xs flex-1 cursor-pointer"
-                >
-                  {option.title}
-                </label>
-              </div>
-            ))}
-            {filteredOptions.length === 0 && (
-              <div className="px-3 py-2 text-xs text-muted-foreground">
-                No options found
-              </div>
-            )}
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  };
-
-  const renderAddFilterButton = () => {
-    const allFilterFields = ['year-group', 'subject'] as const;
-    const usedFilterFields = activeFilters.map(filter => filter.field);
-    const availableFilterFields = allFilterFields.filter(field => !usedFilterFields.includes(field));
-    
-    if (availableFilterFields.length === 0) {
-      return null;
-    }
-
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="xs"
-            className="rounded-full text-xs"
-          >
-            <Plus className="h-3 w-3" size={8} />
-            Add filter
-            <ChevronDown className="h-3 w-3" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          {availableFilterFields.map(field => (
-            <DropdownMenuItem key={field} onClick={() => addFilter(field)} className="text-xs">
-              {getFieldDisplayName(field)}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  };
+  const canProceedFromStep1 = true; // Always can proceed from step 1
+  const canProceedFromStep2 = true; // Always can proceed from step 2
+  const canProceedFromStep3 = true; // Can proceed even if feasibility fails
+  const canFinish = true; // Can always finish from step 4
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Configure Auto-Scheduling</DialogTitle>
+          <DialogDescription>
+            Step {step} of 4
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-2">
-          {/* NEW: Input Version Display */}
-          <div className="space-y-2">
-            <Label htmlFor="inputVersion" className="text-sm font-medium">
-              Input version
-            </Label>
-            <Input
-              id="inputVersion"
-              value={`Version ${versionNumber}`}
-              disabled
-              className="bg-muted"
-            />
-            <p className="text-xs text-muted-foreground">
-              This is the version that will be used as the starting point for auto-scheduling.
-            </p>
-          </div>
-
-          {/* Lesson Scope Filters */}
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label className="text-sm font-medium">Lesson filters (optional)</Label>
-            </div>
-            <div className="flex gap-2 flex-wrap items-center">
-              {activeFilters.map(filter => renderFilterButton(filter))}
-              {renderAddFilterButton()}
-              {activeFilters.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  onClick={clearAllFilters}
-                  className="rounded-full text-xs text-muted-foreground hover:text-destructive"
-                >
-                  <X className="h-3 w-3" />
-                  Clear filters
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Process Stages */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Process stages</Label>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="blocking"
-                    checked={stages.blocking}
-                    onCheckedChange={(checked) => handleStageChange('blocking', checked as boolean)}
-                    disabled={stages.scheduling || stages.staffing}
-                  />
-                  <label
-                    htmlFor="blocking"
-                    className={`text-sm ${stages.scheduling || stages.staffing ? 'text-muted-foreground' : 'cursor-pointer'}`}
-                  >
-                    Blocking
-                  </label>
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  {activeFilters.length > 0 
-                    ? `${scopeStats.blocking.unblockedInScope} out of ${scopeStats.blocking.unblocked} unblocked (out of ${overallStats.total} total)`
-                    : `${scopeStats.blocking.unblocked} unblocked (out of ${overallStats.total} total)`
-                  }
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="scheduling"
-                    checked={stages.scheduling}
-                    onCheckedChange={(checked) => handleStageChange('scheduling', checked as boolean)}
-                    disabled={stages.staffing}
-                  />
-                  <label
-                    htmlFor="scheduling"
-                    className={`text-sm ${stages.staffing ? 'text-muted-foreground' : 'cursor-pointer'}`}
-                  >
-                    Scheduling
-                  </label>
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  {activeFilters.length > 0
-                    ? `${scopeStats.scheduling.unscheduledInScope} out of ${scopeStats.scheduling.unscheduled} unscheduled (out of ${overallStats.total} total)`
-                    : `${scopeStats.scheduling.unscheduled} unscheduled (out of ${overallStats.total} total)`
-                  }
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="staffing"
-                    checked={stages.staffing}
-                    onCheckedChange={(checked) => handleStageChange('staffing', checked as boolean)}
-                  />
-                  <label htmlFor="staffing" className="text-sm cursor-pointer">
-                    Staffing
-                  </label>
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  {activeFilters.length > 0
-                    ? `${scopeStats.staffing.unstaffedInScope} out of ${scopeStats.staffing.unstaffed} unstaffed (out of ${overallStats.total} total)`
-                    : `${scopeStats.staffing.unstaffed} unstaffed (out of ${overallStats.total} total)`
-                  }
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Max Time */}
-          <div className="space-y-2">
-            <Label htmlFor="maxTime" className="text-sm font-medium">
-              Maximum solver time (seconds)
-            </Label>
-            <Input
-              id="maxTime"
-              type="number"
-              min={1}
-              max={3600}
-              value={maxTimeSeconds}
-              onChange={(e) => setMaxTimeSeconds(parseInt(e.target.value) || 60)}
-            />
-            <p className="text-xs text-muted-foreground">
-              The solver will run for up to this many seconds before returning the best solution found.
-            </p>
-          </div>
-
-          {/* Ignore Fixed Assignments Option */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Advanced options</Label>
-            <div className="flex items-start space-x-2 rounded-md border border-amber-200 bg-amber-50 p-3">
-              <Checkbox
-                id="ignoreFixed"
-                checked={ignoreFixedAssignments}
-                onCheckedChange={(checked) => setIgnoreFixedAssignments(checked as boolean)}
-                className="mt-0.5"
-              />
-              <div className="flex-1">
-                <label
-                  htmlFor="ignoreFixed"
-                  className="text-sm font-medium cursor-pointer flex items-center gap-2"
-                >
-                  Ignore existing fixed assignments
-                </label>
-                <p className="text-xs text-muted-foreground mt-1">
-                  When enabled, the solver will ignore any pre-assigned lessons, teachers, or time slots and create a completely fresh schedule. Use this if you want to start from scratch.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Constraints Link */}
-          <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
-            <p className="text-xs text-blue-900">
-              <span className="font-semibold">Note</span>: The solver will respect all constraints configured in your{" "}
-              <Link
-                href={`/dashboard/${orgId}/${projectId}/settings/constraints?version=${versionId}`}
-                className="font-medium underline inline-flex items-center gap-1 hover:text-blue-700"
-                target="_blank"
-              >
-                settings
-                <ExternalLink className="h-3 w-3" />
-              </Link>
-              .
-            </p>
-          </div>
+        {/* Progress Indicator */}
+        <div className="flex gap-2">
+          <div className={`h-1 flex-1 rounded-full transition-colors ${step >= 1 ? 'bg-primary' : 'bg-muted'}`} />
+          <div className={`h-1 flex-1 rounded-full transition-colors ${step >= 2 ? 'bg-primary' : 'bg-muted'}`} />
+          <div className={`h-1 flex-1 rounded-full transition-colors ${step >= 3 ? 'bg-primary' : 'bg-muted'}`} />
+          <div className={`h-1 flex-1 rounded-full transition-colors ${step >= 4 ? 'bg-primary' : 'bg-muted'}`} />
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleStartAutoScheduling}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Starting..." : "Start Auto-Scheduling"}
-          </Button>
+        <div className="space-y-6 pb-2 max-h-[60vh] overflow-y-auto">
+          {/* Step 1: Scope */}
+          {step === 1 && (
+            <ScopeStep
+              versionData={versionData}
+              versionNumber={versionNumber}
+              stages={stages}
+              activeFilters={activeFilters}
+              ignoreFixedAssignments={ignoreFixedAssignments}
+              onStagesChange={setStages}
+              onFiltersChange={setActiveFilters}
+              onIgnoreFixedAssignmentsChange={setIgnoreFixedAssignments}
+              orgId={orgId}
+              projectId={projectId}
+              versionId={versionId}
+            />
+          )}
+
+          {/* Step 2: Constraints */}
+          {step === 2 && (
+            <ConstraintsStep
+              versionData={versionData}
+              hardConstraints={hardConstraints}
+              softConstraints={softConstraints}
+              classSplitPriorities={classSplitPriorities}
+              onHardConstraintsChange={(updates) => setHardConstraints({ ...hardConstraints, ...updates })}
+              onSoftConstraintsChange={(updates) => setSoftConstraints({ ...softConstraints, ...updates })}
+              onClassSplitPrioritiesChange={setClassSplitPriorities}
+              orgId={orgId}
+              projectId={projectId}
+              versionId={versionId}
+            />
+          )}
+
+          {/* Step 3: Feasibility */}
+          {step === 3 && (
+            <FeasibilityStep
+              versionData={versionData}
+              orgId={orgId}
+              projectId={projectId}
+              feasibilityStatus={feasibilityStatus}
+              feasibilityError={feasibilityError}
+              onStatusChange={setFeasibilityStatus}
+              onErrorChange={setFeasibilityError}
+            />
+          )}
+
+          {/* Step 4: Solver */}
+          {step === 4 && (
+            <SolverStep
+              solverConfig={solverConfig}
+              onSolverConfigChange={setSolverConfig}
+            />
+          )}
+        </div>
+
+        <DialogFooter className="flex items-center justify-between">
+          <div className="flex gap-2">
+            {step > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleBack}
+                disabled={isSubmitting || feasibilityStatus === 'checking'}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Back
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              disabled={isSubmitting || feasibilityStatus === 'checking'}
+            >
+              Cancel
+            </Button>
+            {step < 4 ? (
+              <Button
+                type="button"
+                onClick={handleNext}
+                disabled={
+                  (step === 1 && !canProceedFromStep1) ||
+                  (step === 2 && !canProceedFromStep2) ||
+                  (step === 3 && !canProceedFromStep3)
+                }
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button 
+                type="button"
+                onClick={handleStartAutoScheduling}
+                disabled={isSubmitting || !canFinish}
+              >
+                {isSubmitting ? "Starting..." : "Start Auto-Scheduling"}
+              </Button>
+            )}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

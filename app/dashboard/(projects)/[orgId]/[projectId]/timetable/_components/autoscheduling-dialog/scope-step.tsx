@@ -2,10 +2,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,27 +14,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ListFilter, ChevronDown, Plus, Trash2, MoreHorizontal, X } from "lucide-react";
+import { ListFilter, ChevronDown, Plus, Trash2, MoreHorizontal, ExternalLink, X, AlertCircle } from "lucide-react";
 import type { FilterConfig, AutoSchedulingStages } from "./types";
 
 interface ScopeStepProps {
   versionData: any;
+  versionNumber: number;
   stages: AutoSchedulingStages;
-  onStagesChange: (stages: AutoSchedulingStages) => void;
   activeFilters: FilterConfig[];
-  onFiltersChange: (filters: FilterConfig[]) => void;
   ignoreFixedAssignments: boolean;
+  onStagesChange: (stages: AutoSchedulingStages) => void;
+  onFiltersChange: (filters: FilterConfig[]) => void;
   onIgnoreFixedAssignmentsChange: (value: boolean) => void;
+  orgId: string;
+  projectId: string;
+  versionId: string;
 }
 
 export function ScopeStep({
   versionData,
+  versionNumber,
   stages,
-  onStagesChange,
   activeFilters,
-  onFiltersChange,
   ignoreFixedAssignments,
+  onStagesChange,
+  onFiltersChange,
   onIgnoreFixedAssignmentsChange,
+  orgId,
+  projectId,
+  versionId,
 }: ScopeStepProps) {
   const [filterSearchTerms, setFilterSearchTerms] = useState<Record<string, string>>({});
 
@@ -105,6 +114,8 @@ export function ScopeStep({
       staffing: { unstaffed: 0, unstaffedInScope: 0 },
     };
 
+    let unblocked = 0;
+    let unblockedInScope = 0;
     let unscheduled = 0;
     let unscheduledInScope = 0;
     let unstaffed = 0;
@@ -152,14 +163,14 @@ export function ScopeStep({
     });
 
     return {
-      blocking: { unblocked: 0, unblockedInScope: 0 },
+      blocking: { unblocked, unblockedInScope },
       scheduling: { unscheduled, unscheduledInScope },
       staffing: { unstaffed, unstaffedInScope },
     };
   }, [versionData, activeFilters]);
 
   const handleStageChange = (stage: keyof AutoSchedulingStages, checked: boolean) => {
-    const newStages = { ...stages };
+    const newStages = { ...stages, [stage]: checked };
 
     if (stage === 'staffing' && checked) {
       newStages.scheduling = true;
@@ -175,7 +186,6 @@ export function ScopeStep({
       newStages.staffing = false;
     }
 
-    newStages[stage] = checked;
     onStagesChange(newStages);
   };
 
@@ -394,6 +404,22 @@ export function ScopeStep({
 
   return (
     <div className="space-y-6">
+      {/* Input Version Display */}
+      <div className="space-y-2">
+        <Label htmlFor="inputVersion" className="text-sm font-medium">
+          Input version
+        </Label>
+        <Input
+          id="inputVersion"
+          value={`Version ${versionNumber}`}
+          disabled
+          className="bg-muted"
+        />
+        <p className="text-xs text-muted-foreground">
+          This is the version that will be used as the starting point for auto-scheduling.
+        </p>
+      </div>
+
       {/* Lesson Scope Filters */}
       <div className="space-y-3">
         <div className="space-y-1">
@@ -430,11 +456,7 @@ export function ScopeStep({
               />
               <label
                 htmlFor="blocking"
-                className={`text-sm ${
-                  stages.scheduling || stages.staffing 
-                    ? 'text-muted-foreground' 
-                    : 'cursor-pointer'
-                }`}
+                className={`text-sm ${stages.scheduling || stages.staffing ? 'text-muted-foreground' : 'cursor-pointer'}`}
               >
                 Blocking
               </label>
@@ -456,11 +478,7 @@ export function ScopeStep({
               />
               <label
                 htmlFor="scheduling"
-                className={`text-sm ${
-                  stages.staffing 
-                    ? 'text-muted-foreground' 
-                    : 'cursor-pointer'
-                }`}
+                className={`text-sm ${stages.staffing ? 'text-muted-foreground' : 'cursor-pointer'}`}
               >
                 Scheduling
               </label>

@@ -28,7 +28,6 @@ export function SolverStep({
 
   return (
     <div className="space-y-6">
-
       {/* Solver Type Selection */}
       <div className="space-y-2">
         <Label htmlFor="solverType">Solver</Label>
@@ -41,7 +40,9 @@ export function SolverStep({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="g1-base">g1-base</SelectItem>
-            <SelectItem value="h1-base">h1-base</SelectItem>
+            <SelectItem value="h1-base" disabled>
+              h1-base (coming soon)
+            </SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">

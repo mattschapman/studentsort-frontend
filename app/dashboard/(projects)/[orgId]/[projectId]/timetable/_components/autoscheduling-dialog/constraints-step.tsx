@@ -2,20 +2,21 @@
 "use client";
 
 import { useMemo } from "react";
-import { HardConstraintsSettings } from "@/app/dashboard/(projects)/[orgId]/[projectId]/settings/constraints/_components/hard-constraints";
-import { SoftConstraintsSettings } from "@/app/dashboard/(projects)/[orgId]/[projectId]/settings/constraints/_components/soft-constraints";
+import { HardConstraintsSettings } from "../../../settings/constraints/_components/hard-constraints";
+import { SoftConstraintsSettings } from "../../../settings/constraints/_components/soft-constraints";
 import type { Option } from "@/components/multi-select-combobox";
 
 interface ConstraintsStepProps {
   versionData: any;
   hardConstraints: any;
   softConstraints: any;
+  classSplitPriorities: Record<string, number>;
   onHardConstraintsChange: (constraints: any) => void;
   onSoftConstraintsChange: (constraints: any) => void;
+  onClassSplitPrioritiesChange: (priorities: Record<string, number>) => void;
   orgId: string;
   projectId: string;
   versionId: string;
-  showCheckModeInfo?: boolean;
 }
 
 type DayPeriods = {
@@ -27,12 +28,13 @@ export function ConstraintsStep({
   versionData,
   hardConstraints,
   softConstraints,
+  classSplitPriorities,
   onHardConstraintsChange,
   onSoftConstraintsChange,
+  onClassSplitPrioritiesChange,
   orgId,
   projectId,
   versionId,
-  showCheckModeInfo = false,
 }: ConstraintsStepProps) {
   // Parse days and periods from cycle data
   const daysPeriods = useMemo<DayPeriods[]>(() => {
@@ -93,7 +95,6 @@ export function ConstraintsStep({
 
   return (
     <div className="space-y-6">
-
       <div className="space-y-8">
         <HardConstraintsSettings
           hardConstraints={hardConstraints}
@@ -104,13 +105,12 @@ export function ConstraintsStep({
 
         <SoftConstraintsSettings
           softConstraints={softConstraints}
-          classSplitPriorities={versionData?.settings?.classSplitPriorities || {}}
+          classSplitPriorities={classSplitPriorities}
           allClasses={allClasses}
           onUpdateSoftConstraints={onSoftConstraintsChange}
-          onUpdateClassSplitPriorities={() => {}} // Not used in dialog
+          onUpdateClassSplitPriorities={onClassSplitPrioritiesChange}
         />
       </div>
-
     </div>
   );
 }
