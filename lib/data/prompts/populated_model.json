@@ -6,9 +6,10 @@
     "project_id": "Fmk2AQVQ",
     "project_title": "2026-27",
     "version_id": "YpmNzKRP",
-    "version_number": 1,
+    "version_number": 7,
     "created_at": "2026-01-07T14:20:13.275Z",
-    "created_by": "9440774a-93d3-423e-a9bc-c6368965aa4e"
+    "created_by": "9440774a-93d3-423e-a9bc-c6368965aa4e",
+    "input_version_id": "YOHXYMJq" # Note this will only be populated if this version was created programmatically by the solver
   },
   "cycle": {
     "weeks": [
@@ -635,7 +636,8 @@
     },
     "softConstraints": {
       "classSplitting": 50,
-      "balanceWorkload": 50
+      "balanceWorkload": 50,
+      "dailyOverloadPenalty": 50
     },
     "classSplitPriorities": {},
     "autoSchedulingConfig": {
@@ -644,9 +646,56 @@
         "scheduling": true,
         "staffing": true
       },
-      "filters": [],
-      "maxTimeSeconds": 60,
-      "timestamp": "2026-01-13T09:14:55.216Z"
+      "filters": [
+        {
+          "id": "filter-1768638672969",
+          "field": "year-group",
+          "operator": "is",
+          "values": [
+            "8"
+          ]
+        },
+        {
+          "id": "filter-1768638675932",
+          "field": "subject",
+          "operator": "is",
+          "values": [
+            "6G6ALCP6",
+            "18RK9ICW"
+          ]
+        }
+      ],
+      "ignoreFixedAssignments": true,
+      "constraints": {
+        "hard": {
+          "studentConflictPrevention": true,
+          "teacherConflictPrevention": true,
+          "requireSpecialists": true,
+          "classSpacing": true,
+          "maxCapacity": true,
+          "targetCapacity": true,
+          "maximiseCoverFlexibility": true,
+          "doubleLessonRestrictedPeriods": [
+            "A-Mon-4"
+          ],
+          "min_slt_available": 0,
+          "max_teachers_per_class": 2,
+          "max_periods_per_day_per_teacher": 3
+        },
+        "soft": {
+          "classSplitting": 50,
+          "balanceWorkload": 50,
+          "dailyOverloadPenalty": 50
+        },
+        "classSplitPriorities": {}
+      },
+      "solver": {
+        "type": "g1-base",
+        "maxTimeSeconds": 30,
+        "animate": false,
+        "animationSpeed": 1
+      },
+      "timestamp": "2026-01-17T08:31:37.892Z"
     }
   }
 }
