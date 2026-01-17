@@ -196,7 +196,6 @@ export default function VersionsSettingsPage() {
                   onClick={() => setShowBulkDeleteDialog(true)}
                   className="text-xs"
                 >
-                  <Trash2 className="size-3" />
                   Delete ({selectedVersions.size})
                 </Button>
               )}
@@ -300,7 +299,7 @@ export default function VersionsSettingsPage() {
             >
               {isDeleting ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   Deleting...
                 </>
               ) : (
